@@ -1,0 +1,51 @@
+networks:
+  app-network:
+    driver: bridge
+
+services:
+  db:
+    image: mysql:8.0
+    container_name: chinaStockTrader_db
+    ports:
+      - "${MYSQL_PORT}:3306"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+    volumes:
+      - db_data:/var/lib/mysql
+    env_file:
+      - .env
+    healthcheck:
+      test: [ "CMD", "mysqladmin", "ping", "-h", "localhost" ]
+      interval: 5s
+      timeout: 3s
+      retries: 10
+    networks:
+      - app-network
+
+  java-app:
+    build:
+      context: .
+      dockerfile: Dockerfile
+    container_name: chinaStockTrader_java
+    ports:
+      - "8147:8147"
+    environment:
+      MYSQL_DATABASE: ${MYSQL_DATABASE}
+      MYSQL_USER: ${MYSQL_USER}
+      MYSQL_PASSWORD: ${MYSQL_PASSWORD}
+      MYSQL_ROOT_PASSWORD: ${MYSQL_ROOT_PASSWORD}
+      MYSQL_PORT: ${MYSQL_PORT}
+      MYSQL_HOST: host.docker.internal
+    depends_on:
+      - db
+    env_file:
+      - .env
+    networks:
+      - app-network
+
+
+volumes:
+  db_data:
