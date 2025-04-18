@@ -46,6 +46,17 @@ services:
     networks:
       - app-network
 
+  react-app:
+    build:
+      context: ./chinastocktrader-ui
+      dockerfile: Dockerfile
+    container_name: chinaStockTrader_react
+    ports:
+      - "3000:3000"
+    depends_on:
+      - java-app
+    networks:
+      - app-network
 
 volumes:
   db_data:
