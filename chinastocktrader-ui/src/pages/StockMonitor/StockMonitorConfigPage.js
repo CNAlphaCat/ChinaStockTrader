@@ -1,12 +1,17 @@
 import React, { useState } from 'react';
 import { useNavigate } from 'react-router-dom';
 
-const StockConfigPage = () => {
+const StockMonitorConfigPage = () => {
     const [stockCodes, setStockCodes] = useState('');
     const [queryInterval, setBaseInterval] = useState(5);
+    const [notifications, setNotifications] = useState({
+        title: false,
+        alert: false,
+        sound: false,
+    });
+
     const [errors, setErrors] = useState({ stockCodes: '', queryInterval: '' });
     const navigate = useNavigate();
-
 
     const handleSubmit = (e) => {
         e.preventDefault();
@@ -22,7 +27,14 @@ const StockConfigPage = () => {
         }
         setErrors({});
         const codesArray = stockCodes.split(',').map(code => code.trim());
-        navigate('/stock-monitor', { state: { stockCodeList: codesArray } });
+        navigate('/stock-monitor', { state: { stockCodeList: codesArray, notifications } });
+    };
+
+    const handleNotificationChange = (type) => {
+        setNotifications((prev) => ({
+            ...prev,
+            [type]: !prev[type],
+        }));
     };
 
     return (
@@ -56,6 +68,36 @@ const StockConfigPage = () => {
                     )}
                 </label>
 
+                <div>
+                    <h3>通知设置</h3>
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={notifications.title}
+                            onChange={() => handleNotificationChange('title')}
+                        />
+                        启用标题通知
+                    </label>
+                    <br />
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={notifications.alert}
+                            onChange={() => handleNotificationChange('alert')}
+                        />
+                        启用弹窗通知
+                    </label>
+                    <br />
+                    <label>
+                        <input
+                            type="checkbox"
+                            checked={notifications.sound}
+                            onChange={() => handleNotificationChange('sound')}
+                        />
+                        启用声音通知
+                    </label>
+                </div>
+
                 <button type="submit" style={{ padding: '10px 20px' }}>提交</button>
             </form>
         </div>
@@ -64,4 +106,4 @@ const StockConfigPage = () => {
     );
 };
 
-export default StockConfigPage;
+export default StockMonitorConfigPage;

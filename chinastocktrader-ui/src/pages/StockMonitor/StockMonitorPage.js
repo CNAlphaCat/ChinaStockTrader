@@ -8,6 +8,8 @@ const StockMonitorPage = () => {
     const location = useLocation();
     const stockCodeList = useMemo(() => location.state?.stockCodeList || [], [location.state]);
     const queryInterval = location.state?.queryInterval || 5;
+    const notifications = location.state?.notifications || { title: false, alert: false, sound: false };
+    console.log('notifications', notifications);
 
     useEffect(() => {
         let isFetching = false;
@@ -37,6 +39,8 @@ const StockMonitorPage = () => {
     }, [stockCodeList, queryInterval]);
 
     useEffect(() => {
+        if (!notifications.title) return;
+
         const originalTitle = document.title;
     
         const updateTitle = () => {
@@ -56,6 +60,7 @@ const StockMonitorPage = () => {
     }, [stocks]);
 
     useEffect(() => {
+        if (!notifications.sound) return;
         const playAlertSound = () => {
             const audio = new Audio('/notification.mp3');
             audio.play();
@@ -73,6 +78,7 @@ const StockMonitorPage = () => {
     }, [stocks]);
 
     useEffect(() => {
+        if (!notifications.alert) return;
         const sendNotification = () => {
             if (Notification.permission === 'granted') {
                 stocks.forEach(stock => {

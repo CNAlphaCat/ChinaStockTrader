@@ -11,7 +11,7 @@ import StockMonitorConfigPage from './pages/StockMonitor/StockMonitorConfigPage'
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
   <React.StrictMode>
-        <Router>
+    <Router>
       <Routes>
         <Route path="/" element={<App />} />
         <Route path="/one-percent-volatility" element={<OnePercentVolatilityFundsPage />} />

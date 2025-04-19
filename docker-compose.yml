@@ -29,6 +29,7 @@ services:
     build:
       context: .
       dockerfile: Dockerfile
+      no_cache: true
     container_name: chinaStockTrader_java
     ports:
       - "8147:8147"
@@ -51,6 +52,7 @@ services:
     build:
       context: ./chinastocktrader-ui
       dockerfile: Dockerfile
+      no_cache: true
     container_name: chinaStockTrader_react
     ports:
       - "3000:3000"
