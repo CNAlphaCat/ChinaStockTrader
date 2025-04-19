@@ -51,9 +51,9 @@ Docker Desktop->Settings->Docker Engine
 ```
 
 
-### 3.编译运行
+### 4.编译运行
 
-#### 3.1 Windows
+#### 4.1 Windows
 
 进入`ChinaStockTrader`目录，右键`在终端中打开`。然后输入如下命令
 
@@ -61,9 +61,9 @@ Docker Desktop->Settings->Docker Engine
 docker-compose up --build
 ```
 
-#### 3.2 mac
+#### 4.2 mac
 
-复制`ChinaStockTrader`目录完整的地址，如/Users/ChinaStockTrader
+复制`ChinaStockTrader`目录完整的地址，如`/Users/ChinaStockTrader`
 
 打开终端，依次输入如下命令
 
@@ -73,12 +73,12 @@ cd /Users/ChinaStockTrader
 docker-compose up --build
 ```
 
-### 4.运行
+### 5.运行
 
 浏览器输入
 http://localhost:3000
 验证是否能看到网页
 
-### 4.保持更新
+### 6.保持更新
 
-查看Sourcetree上对应的ChinaStockTrader和ChinaStockData项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码，重复步骤3即可
+查看Sourcetree上对应的`ChinaStockTrader`和`ChinaStockData`项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码，重复步骤3即可

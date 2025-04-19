@@ -22,12 +22,12 @@ ChartJS.register(
     Legend
   );
 
-const StockChart = () => {
+const OnePercentVolatilityFundsChart = ({startDate}) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
       {
-        label: 'Shanghai Index History',
+        label: '上证指数 1% 波动率资金量(亿)',
         data: [],
         fill: false,
         backgroundColor: 'rgba(75,192,192,0.4)',
@@ -38,7 +38,7 @@ const StockChart = () => {
 
   useEffect(() => {
     const fetchChartData = async () => {
-        const startDate = '2025-01-01';
+      if (!startDate) return; 
         try {
           const data = await getOnePercentVolatilityFunds(startDate);
     
@@ -51,7 +51,7 @@ const StockChart = () => {
               labels: labels,
               datasets: [
                 {
-                  label: 'Shanghai Index History',
+                  label: '上证指数 1% 波动率资金量(亿)',
                   data: values,
                   fill: false,
                   backgroundColor: 'rgba(75,192,192,0.4)',
@@ -68,7 +68,7 @@ const StockChart = () => {
       };
 
     fetchChartData();
-  }, []);
+  }, [startDate]);
 
   return (
     <div>
@@ -78,4 +78,4 @@ const StockChart = () => {
   );
 };
 
-export default StockChart;
+export default OnePercentVolatilityFundsChart;

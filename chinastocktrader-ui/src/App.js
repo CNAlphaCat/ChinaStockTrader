@@ -1,11 +1,11 @@
 import React from 'react';
-import StockChart from './components/StockChart';
+import OnePercentVolatilityFundsChart from './components/OnePercentVolatilityFundsChart';
 
 function App() {
   return (
     <div className="App">
       <main>
-        <StockChart />
+        <OnePercentVolatilityFundsChart />
       </main>
     </div>
   );
