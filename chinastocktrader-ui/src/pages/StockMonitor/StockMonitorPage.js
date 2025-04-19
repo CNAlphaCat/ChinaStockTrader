@@ -1,21 +1,96 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useMemo } from 'react';
+import { useLocation } from 'react-router-dom';
+import { monitorStock } from '../../services/stockMonitorService';
 
 const StockMonitorPage = () => {
     const [stocks, setStocks] = useState([]);
 
-    useEffect(() => {
+    const location = useLocation();
+    const stockCodeList = useMemo(() => location.state?.stockCodeList || [], [location.state]);
+    const queryInterval = location.state?.queryInterval || 5;
 
+    useEffect(() => {
+        let isFetching = false;
         const fetchStockData = async () => {
-            const mockData = [
-                { code: '600519', price: 1800, change: '+2.5%', speed: '+0.8%', volume: '120亿' },
-                { code: '000858', price: 200, change: '-1.2%', speed: '-0.3%', volume: '30亿' },
-                { code: '300750', price: 500, change: '+3.1%', speed: '+1.2%', volume: '50亿' },
-            ];
-            setStocks(mockData);
+            if (isFetching || stockCodeList.length === 0) return;
+            isFetching = true;
+            try {
+                const data = await monitorStock(stockCodeList);
+                setStocks(data);
+            } finally {
+                isFetching = false;
+            }
         };
 
         fetchStockData();
-    }, []);
+
+        const getRandomInterval = () => {
+            const fluctuation = queryInterval * 1000 * 0.2;
+            return queryInterval * 1000 + Math.random() * fluctuation * 2 - fluctuation;
+        };
+
+        const intervalId = setInterval(fetchStockData, getRandomInterval());
+    
+        return () => {
+            clearInterval(intervalId);
+        };
+    }, [stockCodeList, queryInterval]);
+
+    useEffect(() => {
+        const originalTitle = document.title;
+    
+        const updateTitle = () => {
+            const alertStock = stocks.find(stock => parseFloat(stock.changePercentInThreeMinutes) >= 1);
+            if (alertStock) {
+                document.title = `⚠️ ${alertStock.stockCode} 涨速超标！`;
+            } else {
+                document.title = originalTitle;
+            }
+        };
+    
+        updateTitle();
+    
+        return () => {
+            document.title = originalTitle;
+        };
+    }, [stocks]);
+
+    useEffect(() => {
+        const playAlertSound = () => {
+            const audio = new Audio('/notification.mp3');
+            audio.play();
+        };
+    
+        const checkForAlerts = () => {
+            stocks.forEach(stock => {
+                if (parseFloat(stock.changePercentInThreeMinutes) >= 1) {
+                    playAlertSound();
+                }
+            });
+        };
+    
+        checkForAlerts();
+    }, [stocks]);
+
+    useEffect(() => {
+        const sendNotification = () => {
+            if (Notification.permission === 'granted') {
+                stocks.forEach(stock => {
+                    if (parseFloat(stock.changePercentInThreeMinutes) >= 1) {
+                        new Notification('股票提醒', {
+                            body: `股票 ${stock.stockCode} 涨速超过阈值！`,
+                        });
+                    }
+                });
+            }
+        };
+    
+        if (Notification.permission === 'default') {
+            Notification.requestPermission();
+        }
+    
+        sendNotification();
+    }, [stocks]);
 
     return (
         <div style={{ padding: '20px' }}>
@@ -35,23 +110,23 @@ const StockMonitorPage = () => {
                         <tr
                             key={index}
                             style={{
-                                backgroundColor: parseFloat(stock.speed) >= 1 ? '#ffe6e6' : 'inherit', // 背景色变红
+                                backgroundColor: parseFloat(stock.speed) >= 1 ? '#ffe6e6' : 'inherit',
                             }}
                         >
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.code}</td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.price}</td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.change}</td>
+                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.stockCode}</td>
+                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.closePrice}</td>
+                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.changePercentInThreeMinutes}</td>
                             <td
                                 style={{
                                     border: '1px solid #ddd',
                                     padding: '8px',
-                                    color: parseFloat(stock.speed) >= 1 ? 'red' : 'inherit',
-                                    fontWeight: parseFloat(stock.speed) >= 1 ? 'bold' : 'normal',
+                                    color: parseFloat(stock.changePercentInThreeMinutes) >= 1 ? 'red' : 'inherit',
+                                    fontWeight: parseFloat(stock.changePercentInThreeMinutes) >= 1 ? 'bold' : 'normal',
                                 }}
                             >
-                                {stock.speed}
+                                {stock.changePercentInThreeMinutes}
                             </td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.volume}</td>
+                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.amount}</td>
                         </tr>
                     ))}
                 </tbody>
