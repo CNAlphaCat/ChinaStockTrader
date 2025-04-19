@@ -81,4 +81,4 @@ http://localhost:3000
 
 ### 6.保持更新
 
-查看Sourcetree上对应的`ChinaStockTrader`和`ChinaStockData`项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码，重复步骤3即可
+查看Sourcetree上对应的`ChinaStockTrader`和`ChinaStockData`项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码，重复步骤4即可
