@@ -54,7 +54,7 @@ const StockMonitorConfigPage = () => {
                     )}
                 </label>
                 <label>
-                    设置基础间隔时间（秒）:
+                    设置请求间隔时间（秒）:
                     <br />
                     目前正在测试中，建议不设小于5的值
                     <input
