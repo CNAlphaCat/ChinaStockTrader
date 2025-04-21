@@ -2,6 +2,7 @@ package cn.alphacat.chinastocktrader.service;
 
 import cn.alphacat.chinastockdata.enums.KLineType;
 import cn.alphacat.chinastockdata.market.EastMoneyMarketIndexService;
+import cn.alphacat.chinastockdata.market.MarketService;
 import cn.alphacat.chinastockdata.model.MarketIndex;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 
@@ -16,15 +17,14 @@ import java.util.Optional;
 
 @Service
 public class SSEIndexHistoryService {
-  private final EastMoneyMarketIndexService eastMoneyMarketIndexService;
+  private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
 
   private static final String SSE_INDEX_CODE = "000001";
 
   public SSEIndexHistoryService(
-      final EastMoneyMarketIndexService eastMoneyMarketIndexService,
-      MarketIndexRepository marketIndexRepository) {
-    this.eastMoneyMarketIndexService = eastMoneyMarketIndexService;
+      final MarketService marketService, final MarketIndexRepository marketIndexRepository) {
+    this.marketService = marketService;
     this.marketIndexRepository = marketIndexRepository;
   }
 
@@ -65,7 +65,7 @@ public class SSEIndexHistoryService {
 
   private List<MarketIndex> getAdataMarketIndices(LocalDate startDate) {
     List<MarketIndex> marketIndexs =
-        eastMoneyMarketIndexService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineType.DAILY);
+        marketService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineType.DAILY);
     return marketIndexs.stream()
         .filter(index -> !index.getTradeDate().isEqual(LocalDate.now()))
         .toList();

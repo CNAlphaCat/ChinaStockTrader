@@ -8,7 +8,7 @@ RUN npm ci
 
 COPY . .
 
-RUN npm run build
+RUN rm -rf build && npm run build
 
 FROM nginx:1.27-alpine-slim
 

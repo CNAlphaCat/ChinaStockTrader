@@ -55,10 +55,11 @@ Docker Desktop->Settings->Docker Engine
 
 #### 4.1 Windows
 
-进入`ChinaStockTrader`目录，右键`在终端中打开`。然后输入如下命令
+进入`ChinaStockTrader`目录，右键`在终端中打开`。然后依次输入如下命令
 
 ```Bash
-docker-compose up --build
+docker-compose build --no-cache
+docker-compose up
 ```
 
 #### 4.2 mac
@@ -70,7 +71,8 @@ docker-compose up --build
 ```Bash
 cd /Users/ChinaStockTrader
 
-docker-compose up --build
+docker-compose build --no-cache
+docker-compose up
 ```
 
 ### 5.运行

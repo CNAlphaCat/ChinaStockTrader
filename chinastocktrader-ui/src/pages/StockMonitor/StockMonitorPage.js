@@ -18,7 +18,7 @@ const StockMonitorPage = () => {
             isFetching = true;
             try {
                 const data = await monitorStock(stockCodeList);
-                setStocks(data);
+                setStocks(data.filter(stock => stock));
             } finally {
                 isFetching = false;
             }
@@ -112,16 +112,16 @@ const StockMonitorPage = () => {
                     </tr>
                 </thead>
                 <tbody>
-                    {stocks.map((stock, index) => (
+                    {stocks.filter(stock => stock).map((stock, index) => (
                         <tr
                             key={index}
                             style={{
-                                backgroundColor: parseFloat(stock.speed) >= 1 ? '#ffe6e6' : 'inherit',
+                                backgroundColor: parseFloat(stock.changePercentInThreeMinutes) >= 1 ? '#ffe6e6' : 'inherit',
                             }}
                         >
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.stockCode}</td>
                             <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.closePrice}</td>
-                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.changePercentInThreeMinutes}</td>
+                            <td style={{ border: '1px solid #ddd', padding: '8px' }}>{stock.changePercent}</td>
                             <td
                                 style={{
                                     border: '1px solid #ddd',
