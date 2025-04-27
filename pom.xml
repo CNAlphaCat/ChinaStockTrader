@@ -9,7 +9,7 @@
     </parent>
     <groupId>cn.alphacat</groupId>
     <artifactId>chinastocktrader-parent</artifactId>
-    <version>1.0.3</version>
+    <version>1.0.4</version>
     <packaging>pom</packaging>
 
     <modules>
@@ -26,7 +26,7 @@
             <dependency>
                 <groupId>cn.alphacat</groupId>
                 <artifactId>chinastockdata</artifactId>
-                <version>1.0.4</version>
+                <version>1.0.5</version>
             </dependency>
         </dependencies>
     </dependencyManagement>
