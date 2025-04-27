@@ -1,7 +1,6 @@
 package cn.alphacat.chinastocktrader.service;
 
-import cn.alphacat.chinastockdata.enums.KLineType;
-import cn.alphacat.chinastockdata.market.EastMoneyMarketIndexService;
+import cn.alphacat.chinastockdata.enums.KLineTypeEnum;
 import cn.alphacat.chinastockdata.market.MarketService;
 import cn.alphacat.chinastockdata.model.MarketIndex;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
@@ -65,7 +64,7 @@ public class SSEIndexHistoryService {
 
   private List<MarketIndex> getAdataMarketIndices(LocalDate startDate) {
     List<MarketIndex> marketIndexs =
-        marketService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineType.DAILY);
+        marketService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineTypeEnum.DAILY);
     return marketIndexs.stream()
         .filter(index -> !index.getTradeDate().isEqual(LocalDate.now()))
         .toList();
