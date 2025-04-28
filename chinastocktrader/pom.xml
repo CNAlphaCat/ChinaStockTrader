@@ -5,11 +5,11 @@
 	<parent>
 		<groupId>cn.alphacat</groupId>
 		<artifactId>chinastocktrader-parent</artifactId>
-		<version>1.0.4</version>
+		<version>1.0.5</version>
 		<relativePath>../pom.xml</relativePath>
 	</parent>
 	<artifactId>chinastocktrader</artifactId>
-	<version>1.0.4</version>
+	<version>1.0.5</version>
 	<name>chinastocktrader</name>
 
 	<dependencies>
