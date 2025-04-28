@@ -20,6 +20,10 @@
 
 /one-percent-volatility
 
+### 2.中证1000与300比价
+
+/csi1000-divide-csi300
+
 # 安装
 
 参考chinastocktrader的README.md

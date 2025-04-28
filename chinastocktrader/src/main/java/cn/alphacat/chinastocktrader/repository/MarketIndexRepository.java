@@ -13,7 +13,8 @@ public interface MarketIndexRepository extends JpaRepository<MarketIndexEntity, 
   @Query("SELECT MIN(a.tradeDate) FROM MarketIndexEntity a WHERE a.indexCode = :indexCode")
   Optional<LocalDate> findEarliestTradeDateByIndexCode(@Param("indexCode") String indexCode);
 
-  @Query("SELECT a FROM MarketIndexEntity a WHERE a.tradeDate >= :tradeDate")
+  @Query(
+      "SELECT a FROM MarketIndexEntity a WHERE a.tradeDate >= :tradeDate AND a.indexCode = :indexCode")
   List<MarketIndexEntity> findAllByTradeDateGreaterThanOrEqualTo(
-      @Param("tradeDate") LocalDate tradeDate);
+      @Param("tradeDate") LocalDate tradeDate, @Param("indexCode") String indexCode);
 }
