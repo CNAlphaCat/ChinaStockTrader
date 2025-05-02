@@ -1,6 +1,8 @@
 package cn.alphacat.chinastocktrader.util;
 
+import cn.alphacat.chinastockdata.model.IndexPE;
 import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 
 import org.springframework.stereotype.Component;
@@ -37,5 +39,31 @@ public class EntityConverter {
     model.setChange(entity.getChange());
     model.setChangePct(entity.getChangePct());
     return model;
+  }
+
+  public static IndexPE convertToModel(IndexPEEntity entity) {
+    return IndexPE.builder()
+        .indexCode(entity.getIndexCode())
+        .close(entity.getClose())
+        .lyrPe(entity.getLyrPe())
+        .addLyrPe(entity.getAddLyrPe())
+        .middleLyrPe(entity.getMiddleLyrPe())
+        .ttmPe(entity.getTtmPe())
+        .addTtmPe(entity.getAddTtmPe())
+        .middleTtmPe(entity.getMiddleTtmPe())
+        .build();
+  }
+
+  public static IndexPEEntity convertToEntity(IndexPE model) {
+    IndexPEEntity entity = new IndexPEEntity();
+    entity.setIndexCode(model.getIndexCode());
+    entity.setClose(model.getClose());
+    entity.setLyrPe(model.getLyrPe());
+    entity.setAddLyrPe(model.getAddLyrPe());
+    entity.setMiddleLyrPe(model.getMiddleLyrPe());
+    entity.setTtmPe(model.getTtmPe());
+    entity.setAddTtmPe(model.getAddTtmPe());
+    entity.setMiddleTtmPe(model.getMiddleTtmPe());
+    return entity;
   }
 }

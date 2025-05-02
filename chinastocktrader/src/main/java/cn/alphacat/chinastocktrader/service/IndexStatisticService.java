@@ -1,6 +1,8 @@
 package cn.alphacat.chinastocktrader.service;
 
+import cn.alphacat.chinastockdata.model.IndexPE;
 import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.model.CSI1000DivideCSI300;
 import org.springframework.stereotype.Service;
 
@@ -10,6 +12,7 @@ import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
+import java.util.Map;
 
 @Service
 public class IndexStatisticService {
@@ -20,6 +23,10 @@ public class IndexStatisticService {
       final CSI300IndexService csi300IndexService, final CSI1000IndexService csi1000IndexService) {
     this.csi300IndexService = csi300IndexService;
     this.csi1000IndexService = csi1000IndexService;
+  }
+
+  public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
+    return csi300IndexService.getCSI300IndexPE(startDate);
   }
 
   public List<CSI1000DivideCSI300> getCSI1000DivideCSI300(LocalDate startDate) {

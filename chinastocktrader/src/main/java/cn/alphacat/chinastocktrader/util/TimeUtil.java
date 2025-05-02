@@ -11,6 +11,10 @@ public class TimeUtil {
     return now.isAfter(closeTime);
   }
 
+  public static boolean isBeforeOrEqualStockCloseTime() {
+    return !isAfterStockCloseTime();
+  }
+
   public static boolean isBeforeStockOpenTime() {
     LocalTime now = LocalTime.now(ZoneId.of("Asia/Shanghai"));
     LocalTime openTime = LocalTime.of(9, 15);

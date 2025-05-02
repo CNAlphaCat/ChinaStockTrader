@@ -1,29 +1,51 @@
 package cn.alphacat.chinastocktrader.service;
 
 import cn.alphacat.chinastockdata.enums.KLineTypeEnum;
+import cn.alphacat.chinastockdata.market.LeguLeguService;
 import cn.alphacat.chinastockdata.market.MarketService;
+import cn.alphacat.chinastockdata.model.IndexPE;
 import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
+import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.TimeUtil;
+import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.List;
+import java.util.Map;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
+
+import cn.alphacat.chinastockdata.enums.LuguLuguIndexPEEnums;
 
 @Service
 public class CSI300IndexService {
   private final MarketService marketService;
+  private final LeguLeguService leguLeguService;
+
+  private final Executor taskExecutor;
+
   private final MarketIndexRepository marketIndexRepository;
+  private final IndexPERepository indexPERepository;
 
   private static final String CSI300_CODE = "000300";
 
   public CSI300IndexService(
-      final MarketService marketService, MarketIndexRepository marketIndexRepository) {
+      final MarketService marketService,
+      final MarketIndexRepository marketIndexRepository,
+      final LeguLeguService leguLeguService,
+      final Executor taskExecutor,
+      final IndexPERepository indexPERepository) {
     this.marketService = marketService;
     this.marketIndexRepository = marketIndexRepository;
+    this.leguLeguService = leguLeguService;
+    this.taskExecutor = taskExecutor;
+    this.indexPERepository = indexPERepository;
   }
 
   public List<MarketIndex> getCSI300IndexDaily(LocalDate startDate) {
@@ -59,6 +81,77 @@ public class CSI300IndexService {
             .toList();
     marketIndexRepository.saveAll(entitiesToSave);
     return marketIndexs;
+  }
+
+  public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
+    CompletableFuture.runAsync(this::getCSI300IndexPEFromAPIAndSaveToDB, taskExecutor);
+    List<IndexPEEntity> entities =
+        indexPERepository.findByIndexCodeAndDateIsGreaterThanEqual(
+            LuguLuguIndexPEEnums.SCI300.getIndeCode(), startDate);
+    return entities.stream()
+        .collect(
+            java.util.stream.Collectors.toMap(
+                IndexPEEntity::getDate, EntityConverter::convertToModel));
+  }
+
+  private void getCSI300IndexPEFromAPIAndSaveToDB() {
+    Optional<LocalDate> top1DateByIndexCodeOrderByDateDesc =
+        indexPERepository.findTop1DateByIndexCodeOrderByDateDesc(
+            LuguLuguIndexPEEnums.SCI300.getIndeCode());
+    if (top1DateByIndexCodeOrderByDateDesc.isEmpty()) {
+      Map<LocalDate, IndexPE> stockIndexPE =
+          leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+      List<IndexPEEntity> entities =
+          stockIndexPE.values().stream().map(EntityConverter::convertToEntity).toList();
+      if (!TimeUtil.isAfterStockCloseTime()) {
+        entities =
+            entities.stream().filter(entity -> !entity.getDate().isEqual(LocalDate.now())).toList();
+      }
+
+      indexPERepository.saveAll(entities);
+      return;
+    }
+    LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
+    if (!needUpdate(latestDateInDB)) {
+      return;
+    }
+
+    Map<LocalDate, IndexPE> stockIndexPE =
+        leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+    List<IndexPEEntity> entities =
+        stockIndexPE.entrySet().stream()
+            .filter(entry -> entry.getKey().isAfter(latestDateInDB))
+            .map(item -> EntityConverter.convertToEntity(item.getValue()))
+            .toList();
+    if (!TimeUtil.isAfterStockCloseTime()) {
+      entities =
+          entities.stream().filter(entity -> !entity.getDate().isEqual(LocalDate.now())).toList();
+    }
+    indexPERepository.saveAll(entities);
+  }
+
+  private static boolean needUpdate(LocalDate latestDateInDB) {
+    LocalDate preTradeDate = getPreTradeDate();
+    if (latestDateInDB.isEqual(preTradeDate) || latestDateInDB.isAfter(preTradeDate)) {
+      return false;
+    }
+    if (TimeUtil.isBeforeOrEqualStockCloseTime()) {
+      return false;
+    }
+    return true;
+  }
+
+  private static LocalDate getPreTradeDate() {
+    LocalDate now = LocalDate.now();
+    int dayOfWeek = now.getDayOfWeek().getValue();
+
+    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
+      return now;
+    } else if (dayOfWeek == 6) {
+      return now.minusDays(1);
+    } else {
+      return now.minusDays(2);
+    }
   }
 
   private List<MarketIndex> getCSI300IndexDailyFromAPI(LocalDate startDate) {
