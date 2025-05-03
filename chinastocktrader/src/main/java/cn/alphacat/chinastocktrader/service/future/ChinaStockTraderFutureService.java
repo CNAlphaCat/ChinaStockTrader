@@ -1,4 +1,4 @@
-package cn.alphacat.chinastocktrader.service;
+package cn.alphacat.chinastocktrader.service.future;
 
 import cn.alphacat.chinastockdata.future.FutureService;
 import cn.alphacat.chinastockdata.model.FutureHistory;

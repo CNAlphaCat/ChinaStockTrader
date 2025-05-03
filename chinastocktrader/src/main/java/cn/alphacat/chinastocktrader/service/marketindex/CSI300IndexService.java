@@ -1,4 +1,4 @@
-package cn.alphacat.chinastocktrader.service;
+package cn.alphacat.chinastocktrader.service.marketindex;
 
 import cn.alphacat.chinastockdata.enums.KLineTypeEnum;
 import cn.alphacat.chinastockdata.market.LeguLeguService;
@@ -11,7 +11,6 @@ import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.TimeUtil;
-import org.springframework.scheduling.annotation.Async;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;

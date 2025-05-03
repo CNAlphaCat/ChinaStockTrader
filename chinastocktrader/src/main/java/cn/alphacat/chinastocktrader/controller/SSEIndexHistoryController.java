@@ -1,7 +1,7 @@
 package cn.alphacat.chinastocktrader.controller;
 
 import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;
-import cn.alphacat.chinastocktrader.service.SSEIndexHistoryService;
+import cn.alphacat.chinastocktrader.service.marketindex.SSEIndexHistoryService;
 import org.springframework.format.annotation.DateTimeFormat;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.PathVariable;

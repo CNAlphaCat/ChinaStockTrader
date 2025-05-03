@@ -2,9 +2,11 @@ package cn.alphacat.chinastocktrader.util;
 
 import cn.alphacat.chinastockdata.model.IndexPE;
 import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 
+import cn.alphacat.chinastocktrader.entity.TreasuryBondEntity;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -43,6 +45,7 @@ public class EntityConverter {
 
   public static IndexPE convertToModel(IndexPEEntity entity) {
     return IndexPE.builder()
+        .date(entity.getDate())
         .indexCode(entity.getIndexCode())
         .close(entity.getClose())
         .lyrPe(entity.getLyrPe())
@@ -65,5 +68,41 @@ public class EntityConverter {
     entity.setAddTtmPe(model.getAddTtmPe());
     entity.setMiddleTtmPe(model.getMiddleTtmPe());
     return entity;
+  }
+
+  public static TreasuryBondEntity convertToEntity(TreasuryBond model) {
+    return TreasuryBondEntity.builder()
+        .solarDate(model.getSolarDate())
+        .fiveYearTreasuryBondYield(model.getFiveYearTreasuryBondYield())
+        .tenYearTreasuryBondYield(model.getTenYearTreasuryBondYield())
+        .thirtyYearTreasuryBondYield(model.getThirtyYearTreasuryBondYield())
+        .twoYearTreasuryBondYield(model.getTwoYearTreasuryBondYield())
+        .twoYearMinusTenYearTreasuryBondYield(model.getTwoYearMinusTenYearTreasuryBondYield())
+        .twoYearUSTreasuryBondYield(model.getTwoYearUSTreasuryBondYield())
+        .fiveYearUSTreasuryBondYield(model.getFiveYearUSTreasuryBondYield())
+        .tenYearUSTreasuryBondYield(model.getTenYearUSTreasuryBondYield())
+        .thirtyYearUSTreasuryBondYield(model.getThirtyYearUSTreasuryBondYield())
+        .twoYearMinusTenYearUSTreasuryBondYield(model.getTwoYearMinusTenYearUSTreasuryBondYield())
+        .chinaGDPGrowthRate(model.getChinaGDPGrowthRate())
+        .usGDPGrowthRate(model.getUsGDPGrowthRate())
+        .build();
+  }
+
+  public static TreasuryBond convertToModel(TreasuryBondEntity entity) {
+    return TreasuryBond.builder()
+        .solarDate(entity.getSolarDate())
+        .fiveYearTreasuryBondYield(entity.getFiveYearTreasuryBondYield())
+        .tenYearTreasuryBondYield(entity.getTenYearTreasuryBondYield())
+        .thirtyYearTreasuryBondYield(entity.getThirtyYearTreasuryBondYield())
+        .twoYearTreasuryBondYield(entity.getTwoYearTreasuryBondYield())
+        .twoYearMinusTenYearTreasuryBondYield(entity.getTwoYearMinusTenYearTreasuryBondYield())
+        .twoYearUSTreasuryBondYield(entity.getTwoYearUSTreasuryBondYield())
+        .fiveYearUSTreasuryBondYield(entity.getFiveYearUSTreasuryBondYield())
+        .tenYearUSTreasuryBondYield(entity.getTenYearUSTreasuryBondYield())
+        .thirtyYearUSTreasuryBondYield(entity.getThirtyYearUSTreasuryBondYield())
+        .twoYearMinusTenYearUSTreasuryBondYield(entity.getTwoYearMinusTenYearUSTreasuryBondYield())
+        .chinaGDPGrowthRate(entity.getChinaGDPGrowthRate())
+        .usGDPGrowthRate(entity.getUsGDPGrowthRate())
+        .build();
   }
 }
