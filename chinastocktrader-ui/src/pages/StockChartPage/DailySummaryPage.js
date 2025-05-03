@@ -1,10 +1,11 @@
 import React, { useState } from 'react';
 import TenYearTreasuryBondChart from '../../components/TenYearTreasuryBondChart';
+import EquityPremiumIndexChart from '../../components/EquityPremiumIndexChart';
 
 const DailySummaryPage = () => {
     const getDefaultStartDate = () => {
         const today = new Date();
-        today.setMonth(today.getMonth() - 3);
+        today.setMonth(today.getMonth() - 12);
         return today.toISOString().split('T')[0];
     };
 
@@ -26,6 +27,7 @@ const DailySummaryPage = () => {
                 />
             </div>
             <TenYearTreasuryBondChart startDate={startDate} />
+            <EquityPremiumIndexChart startDate={startDate} />
         </div>
     );
 };

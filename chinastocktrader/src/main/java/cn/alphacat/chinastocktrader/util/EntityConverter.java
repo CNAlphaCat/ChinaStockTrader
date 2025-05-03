@@ -71,21 +71,22 @@ public class EntityConverter {
   }
 
   public static TreasuryBondEntity convertToEntity(TreasuryBond model) {
-    return TreasuryBondEntity.builder()
-        .solarDate(model.getSolarDate())
-        .fiveYearTreasuryBondYield(model.getFiveYearTreasuryBondYield())
-        .tenYearTreasuryBondYield(model.getTenYearTreasuryBondYield())
-        .thirtyYearTreasuryBondYield(model.getThirtyYearTreasuryBondYield())
-        .twoYearTreasuryBondYield(model.getTwoYearTreasuryBondYield())
-        .twoYearMinusTenYearTreasuryBondYield(model.getTwoYearMinusTenYearTreasuryBondYield())
-        .twoYearUSTreasuryBondYield(model.getTwoYearUSTreasuryBondYield())
-        .fiveYearUSTreasuryBondYield(model.getFiveYearUSTreasuryBondYield())
-        .tenYearUSTreasuryBondYield(model.getTenYearUSTreasuryBondYield())
-        .thirtyYearUSTreasuryBondYield(model.getThirtyYearUSTreasuryBondYield())
-        .twoYearMinusTenYearUSTreasuryBondYield(model.getTwoYearMinusTenYearUSTreasuryBondYield())
-        .chinaGDPGrowthRate(model.getChinaGDPGrowthRate())
-        .usGDPGrowthRate(model.getUsGDPGrowthRate())
-        .build();
+    TreasuryBondEntity entity = new TreasuryBondEntity();
+    entity.setSolarDate(model.getSolarDate());
+    entity.setFiveYearTreasuryBondYield(model.getFiveYearTreasuryBondYield());
+    entity.setTenYearTreasuryBondYield(model.getTenYearTreasuryBondYield());
+    entity.setThirtyYearTreasuryBondYield(model.getThirtyYearTreasuryBondYield());
+    entity.setTwoYearTreasuryBondYield(model.getTwoYearTreasuryBondYield());
+    entity.setTwoYearMinusTenYearTreasuryBondYield(model.getTwoYearMinusTenYearTreasuryBondYield());
+    entity.setTwoYearUSTreasuryBondYield(model.getTwoYearUSTreasuryBondYield());
+    entity.setFiveYearUSTreasuryBondYield(model.getFiveYearUSTreasuryBondYield());
+    entity.setTenYearUSTreasuryBondYield(model.getTenYearUSTreasuryBondYield());
+    entity.setThirtyYearUSTreasuryBondYield(model.getThirtyYearUSTreasuryBondYield());
+    entity.setTwoYearMinusTenYearUSTreasuryBondYield(
+        model.getTwoYearMinusTenYearUSTreasuryBondYield());
+    entity.setChinaGDPGrowthRate(model.getChinaGDPGrowthRate());
+    entity.setUsGDPGrowthRate(model.getUsGDPGrowthRate());
+    return entity;
   }
 
   public static TreasuryBond convertToModel(TreasuryBondEntity entity) {
