@@ -39,6 +39,7 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
   });
 
   const fetchTimeoutRef = useRef(null);
+  const [endDate, setEndDate] = useState('');
 
   useEffect(() => {
     if (fetchTimeoutRef.current) {
@@ -54,6 +55,10 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
 
         if (Array.isArray(data)) {
           const labels = data.map((item) => item.date);
+
+          const lastDate = labels[labels.length - 1];
+          setEndDate(lastDate);
+
           const values = data.map((item) => item.displayFunds);
 
           setChartData({
@@ -87,6 +92,9 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
   return (
     <div>
       <h2>{TITLE}</h2>
+      <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
+        最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'}
+      </div>
       <Line
         data={chartData}
         options={{
@@ -109,6 +117,22 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
               font: {
                 size: 20,
               },
+            }, annotation: {
+              annotations: {
+                timeRangeLabel: {
+                  type: 'label',
+                  xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
+                  yValue: Math.max(...chartData.datasets[0].data) * 0.98,
+                  backgroundColor: 'rgba(255,255,255,0.7)',
+                  borderWidth: 1,
+                  borderColor: 'gray',
+                  content: [` ${startDate} - ${endDate}`],
+                  font: {
+                    size: 16,
+                  },
+                  padding: 6,
+                }
+              }
             }
           },
           scales: {

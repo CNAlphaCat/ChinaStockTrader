@@ -46,6 +46,7 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
     });
 
     const fetchTimeoutRef = useRef(null);
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         if (fetchTimeoutRef.current) {
@@ -57,8 +58,12 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
             try {
                 const data = await getTreasuryBondData(startDate);
 
+
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.solarDate);
+                    const lastDate = labels[labels.length - 1];
+                    setEndDate(lastDate);
+
                     const chinaTenYearTreasuryBondYield = data.map((item) => item.tenYearTreasuryBondYield);
                     const usTenYearTreasuryBondYield = data.map((item) => item.tenYearUSTreasuryBondYield);
 
@@ -96,9 +101,28 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
         };
     }, [startDate]);
 
+    const findLastValidValue = (dataArray) => {
+        for (let i = dataArray.length - 1; i >= 0; i--) {
+            const value = dataArray[i];
+            if (value !== null && value !== undefined && !isNaN(value)) {
+                return value.toFixed(2);
+            }
+        }
+        return '-';
+    };
+
+    const chinaData = chartData.datasets[0].data;
+    const usData = chartData.datasets[1].data;
+
+    const lastChinaValue = findLastValidValue(chinaData);
+    const lastUsValue = findLastValidValue(usData);
+
     return (
         <div>
             <h2>{TITLE}</h2>
+            <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
+                最新值 - 中国：{lastChinaValue}；美国：{lastUsValue}
+            </div>
             <Line
                 data={chartData}
                 options={{
@@ -121,6 +145,28 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
                             font: {
                                 size: 20,
                             },
+                        }, annotation: {
+                            annotations: {
+                                timeRangeLabel: {
+                                    type: 'label',
+                                    xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
+                                    yValue: (() => {
+                                        const allData = [
+                                            ...chartData.datasets[0].data.filter(v => v !== null && v !== undefined),
+                                            ...chartData.datasets[1].data.filter(v => v !== null && v !== undefined)
+                                        ];
+                                        return Math.max(...allData) * 0.98;
+                                    })(),
+                                    backgroundColor: 'rgba(255,255,255,0.7)',
+                                    borderWidth: 1,
+                                    borderColor: 'gray',
+                                    content: [` ${startDate} - ${endDate}`],
+                                    font: {
+                                        size: 16,
+                                    },
+                                    padding: 6,
+                                }
+                            }
                         }
                     },
                     scales: {

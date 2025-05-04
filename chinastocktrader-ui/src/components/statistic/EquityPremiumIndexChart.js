@@ -42,6 +42,7 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
     });
 
     const fetchTimeoutRef = useRef(null);
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         if (fetchTimeoutRef.current) {
@@ -57,6 +58,8 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
 
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.date);
+                    const lastDate = labels[labels.length - 1];
+                    setEndDate(lastDate);
                     const percentile = data.map((item) => item.percentile);
 
                     setChartData({
@@ -90,6 +93,12 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
     return (
         <div>
             <h2>股权溢价指数</h2>
+            <p style={{ marginTop: '10px', fontStyle: 'italic' }}>
+                历史上有多少时间比现在的股权溢价指数低
+            </p>
+            <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
+                最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'}
+            </div>
             <Line
                 data={chartData}
                 options={{
@@ -108,12 +117,25 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                         },
                         title: {
                             display: true,
-                            text: '股权溢价指数历史百分位（当前值占历史数据的百分比）',
+                            text: `股权溢价指数历史百分位`,
                             font: {
                                 size: 20,
                             },
                         }, annotation: {
                             annotations: {
+                                timeRangeLabel: {
+                                    type: 'label',
+                                    xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
+                                    yValue: Math.max(...chartData.datasets[0].data) * 0.98,
+                                    backgroundColor: 'rgba(255,255,255,0.7)',
+                                    borderWidth: 1,
+                                    borderColor: 'gray',
+                                    content: [` ${startDate} - ${endDate}`],
+                                    font: {
+                                        size: 13,
+                                    },
+                                    padding: 6,
+                                },
                                 line80: {
                                     type: 'line',
                                     yMin: 80,

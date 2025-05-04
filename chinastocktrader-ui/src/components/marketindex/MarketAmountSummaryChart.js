@@ -46,6 +46,7 @@ const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
     });
 
     const fetchTimeoutRef = useRef(null);
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         if (fetchTimeoutRef.current) {
@@ -63,6 +64,10 @@ const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
                     return;
                 }
                 const labels = shanghaiIndexHistory.map((item) => item.tradeDate);
+
+                const lastDate = labels[labels.length - 1];
+                setEndDate(lastDate);
+
                 const shanghaiAmount = shanghaiIndexHistory.map((item) => item.amount / 100000000);
                 const shenzhenAmount = shenzhenIndexHistory.map((item) => item.amount / 100000000);
 
@@ -98,9 +103,28 @@ const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
         };
     }, [startDate]);
 
+    const findLastValidValue = (dataArray) => {
+        for (let i = dataArray.length - 1; i >= 0; i--) {
+            const value = dataArray[i];
+            if (value !== null && value !== undefined && !isNaN(value)) {
+                return value.toFixed(2);
+            }
+        }
+        return '-';
+    };
+
+    const shanghaiData = chartData.datasets[0].data;
+    const shenzhenData = chartData.datasets[1].data;
+
+    const shanghai = findLastValidValue(shanghaiData);
+    const shenzhen = findLastValidValue(shenzhenData);
+
     return (
         <div>
             <h2>{TITLE}</h2>
+            <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
+                最新值 - 上海：{shanghai}；深圳：{shenzhen}
+            </div>
             <Line
                 data={chartData}
                 options={{
@@ -123,6 +147,28 @@ const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
                             font: {
                                 size: 20,
                             },
+                        }, annotation: {
+                            annotations: {
+                                timeRangeLabel: {
+                                    type: 'label',
+                                    xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
+                                    yValue: (() => {
+                                        const allData = [
+                                            ...chartData.datasets[0].data.filter(v => v !== null && v !== undefined),
+                                            ...chartData.datasets[1].data.filter(v => v !== null && v !== undefined)
+                                        ];
+                                        return Math.max(...allData) * 0.98;
+                                    })(),
+                                    backgroundColor: 'rgba(255,255,255,0.7)',
+                                    borderWidth: 1,
+                                    borderColor: 'gray',
+                                    content: [`${startDate} - ${endDate}`],
+                                    font: {
+                                        size: 16,
+                                    },
+                                    padding: 6,
+                                }
+                            }
                         }
                     },
                     scales: {

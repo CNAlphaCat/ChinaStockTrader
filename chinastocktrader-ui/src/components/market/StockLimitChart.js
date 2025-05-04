@@ -87,9 +87,28 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
         };
     }, []);
 
+    const findLastValidValue = (dataArray) => {
+        for (let i = dataArray.length - 1; i >= 0; i--) {
+            const value = dataArray[i];
+            if (value !== null && value !== undefined && !isNaN(value)) {
+                return value.toFixed(2);
+            }
+        }
+        return '-';
+    };
+
+    const limitUpData = chartData.datasets[0].data;
+    const limitDownData = chartData.datasets[1].data;
+
+    const limitUpValue = findLastValidValue(limitUpData);
+    const limitDownValue = findLastValidValue(limitDownData);
+
     return (
         <div>
             <h2>{TITLE}</h2>
+            <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
+                最新值 - 涨停：{limitUpValue}；跌停：{limitDownValue}
+            </div>
             <Line
                 data={chartData}
                 options={{
