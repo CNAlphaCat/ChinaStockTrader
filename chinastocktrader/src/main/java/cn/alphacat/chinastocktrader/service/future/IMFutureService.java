@@ -4,6 +4,7 @@ import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineTypeEnum;
 import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineWeightingEnum;
 import cn.alphacat.chinastockdata.future.FutureService;
 import cn.alphacat.chinastockdata.model.future.FutureHistory;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -20,19 +21,19 @@ public class IMFutureService {
   }
 
   public List<FutureHistory> getFutureHistory(
-          LocalDate beginDate,
-          LocalDate endDate,
-          EastMoneyQTKlineTypeEnum klt,
-          EastMoneyQTKlineWeightingEnum fqt) {
+      LocalDate beginDate,
+      LocalDate endDate,
+      EastMoneyQTKlineTypeEnum klt,
+      EastMoneyQTKlineWeightingEnum fqt) {
     return featureService.getFutureHistory(IM_MAIN_FUTURE_CODE, beginDate, endDate, klt, fqt);
   }
 
   public List<FutureHistory> getTodayFutureHistory() {
     return featureService.getFutureHistory(
         IM_MAIN_FUTURE_CODE,
-        LocalDate.now(),
-        LocalDate.now(),
+        LocalDateUtil.getNow(),
+        LocalDateUtil.getNow(),
         EastMoneyQTKlineTypeEnum.ONE_MINUTE,
         EastMoneyQTKlineWeightingEnum.NON_WEIGHTING);
-    }
+  }
 }

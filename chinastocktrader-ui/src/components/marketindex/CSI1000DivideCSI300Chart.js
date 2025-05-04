@@ -11,8 +11,7 @@ import {
     Legend,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-
-import { getEquityPremiumIndex } from '../services/indexStatisticService';
+import { getCSI1000DivideCSI300 } from '../../services/indexStatisticService';
 
 ChartJS.register(
     CategoryScale,
@@ -25,12 +24,14 @@ ChartJS.register(
 );
 ChartJS.register(annotationPlugin);
 
-const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
+const TITLE = '中证1000/中证300 指数比值';
+
+const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
             {
-                label: '股权溢价指数',
+                label: TITLE,
                 data: [],
                 fill: false,
                 backgroundColor: 'rgba(153,102,255,0.4)',
@@ -42,31 +43,29 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
     const fetchTimeoutRef = useRef(null);
 
     useEffect(() => {
+
         if (fetchTimeoutRef.current) {
             clearTimeout(fetchTimeoutRef.current);
         }
 
         if (!startDate) return;
-
         fetchTimeoutRef.current = setTimeout(async () => {
-
             try {
-                const data = await getEquityPremiumIndex(startDate);
+                const data = await getCSI1000DivideCSI300(startDate);
 
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.date);
-                    const percentile = data.map((item) => item.percentile);
+                    const values = data.map((item) => item.dividedValue);
 
                     setChartData({
                         labels: labels,
                         datasets: [
                             {
-                                label: '股权溢价指数历史百分位',
-                                data: percentile,
+                                label: TITLE,
+                                data: values,
                                 fill: false,
-                                backgroundColor: 'rgba(153,102,255,0.4)',
-                                borderColor: 'rgba(153,102,255,1)',
-                                spanGaps: true
+                                backgroundColor: 'rgba(75,192,192,0.4)',
+                                borderColor: 'rgba(75,192,192,1)',
                             },
                         ],
                     });
@@ -87,14 +86,14 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
 
     return (
         <div>
-            <h2>股权溢价指数</h2>
+            <h2>{TITLE}</h2>
             <Line
                 data={chartData}
                 options={{
                     elements: {
                         point: {
                             radius: showPointsDetail ? 3 : 0,
-                        }
+                        },
                     },
                     plugins: {
                         legend: {
@@ -106,16 +105,16 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                         },
                         title: {
                             display: true,
-                            text: '股权溢价指数历史百分位（当前值占历史数据的百分比）',
+                            text: TITLE,
                             font: {
                                 size: 20,
                             },
                         }, annotation: {
                             annotations: {
-                                line80: {
+                                line_if_policy: {
                                     type: 'line',
-                                    yMin: 80,
-                                    yMax: 80,
+                                    yMin: 1.62,
+                                    yMax: 1.62,
                                     borderColor: 'red',
                                     borderWidth: 2,
                                     borderDash: [5, 5],
@@ -124,10 +123,10 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                                         content: '80%',
                                     }
                                 },
-                                line20: {
+                                line_im_policy: {
                                     type: 'line',
-                                    yMin: 20,
-                                    yMax: 20,
+                                    yMin: 1.42,
+                                    yMax: 1.42,
                                     borderColor: 'red',
                                     borderWidth: 2,
                                     borderDash: [5, 5],
@@ -161,4 +160,4 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
     );
 };
 
-export default EquityPremiumIndexChart;
+export default CSI1000DivideCSI300Chart;

@@ -1,5 +1,6 @@
-package cn.alphacat.chinastocktrader.controller;
+package cn.alphacat.chinastocktrader.controller.marketindex;
 
+import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;
 import cn.alphacat.chinastocktrader.service.marketindex.SSEIndexHistoryService;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -21,8 +22,14 @@ public class SSEIndexHistoryController {
   }
 
   @GetMapping("/onePercentVolatilityFunds/{startDate}")
-  public List<OnePercentVolatilityFunds> getShanghaiIndexHistory(
+  public List<OnePercentVolatilityFunds> getOnePercentVolatilityFunds(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
     return sseIndexHistoryService.getSortedOnePercentVolatilityFunds(startDate);
+  }
+
+  @GetMapping("/shanghaiIndexHistory/{startDate}")
+  public List<MarketIndex> getShanghaiIndexHistory(
+      @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
+    return sseIndexHistoryService.getShanghaiIndexHistory(startDate);
   }
 }

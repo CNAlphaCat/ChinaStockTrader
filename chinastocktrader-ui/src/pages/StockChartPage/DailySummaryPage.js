@@ -1,9 +1,12 @@
 import React, { useState } from 'react';
-import TenYearTreasuryBondChart from '../../components/TenYearTreasuryBondChart';
-import EquityPremiumIndexChart from '../../components/EquityPremiumIndexChart';
-import CSI1000DivideCSI300Chart from '../../components/CSI1000DivideCSI300Chart';
-import OnePercentVolatilityFundsChart from '../../components/OnePercentVolatilityFundsChart';
-import StockLimitChart from '../../components/StockLimitChart';
+import TenYearTreasuryBondChart from '../../components/bond/TenYearTreasuryBondChart';
+import EquityPremiumIndexChart from '../../components/statistic/EquityPremiumIndexChart';
+import CSI1000DivideCSI300Chart from '../../components/marketindex/CSI1000DivideCSI300Chart';
+import OnePercentVolatilityFundsChart from '../../components/marketindex/OnePercentVolatilityFundsChart';
+import StockLimitChart from '../../components/market/StockLimitChart';
+import StockLimitLogOddsChart from '../../components/market/StockLimitLogOddsChart';
+import MarketAmountSummaryChart from '../../components/marketindex/MarketAmountSummaryChart';
+import TotalMarketAmountSummaryChart from '../../components/marketindex/TotalMarketAmountSummaryChart';
 const DailySummaryPage = () => {
 
     const getDefaultStartDate = (monthsAgo) => {
@@ -19,10 +22,13 @@ const DailySummaryPage = () => {
     return (
         <div>
             <EquityPremiumIndexChart startDate={startDate10Y}  showPointsDetail={false} />
+            <TenYearTreasuryBondChart startDate={startDate5Y}  showPointsDetail={false} />
+            <TotalMarketAmountSummaryChart startDate={startDate1Y}  showPointsDetail={false} />
+            <MarketAmountSummaryChart startDate={startDate1Y}  showPointsDetail={false} />
+            <StockLimitLogOddsChart showPointsDetail={false} />
             <StockLimitChart showPointsDetail={false} />
             <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
             <OnePercentVolatilityFundsChart startDate={startDate1Y}  showPointsDetail={false} />  
-            <TenYearTreasuryBondChart startDate={startDate5Y}  showPointsDetail={false} />
         </div>
     );
 };

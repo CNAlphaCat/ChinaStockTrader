@@ -11,6 +11,7 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
@@ -18,15 +19,15 @@ import java.util.concurrent.Executor;
 
 @Service
 @Slf4j
-public class CSI1000IndexService {
+public class SZCIHistoryService {
   private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
 
   private final Executor taskExecutor;
 
-  private static final String CSI1000_CODE = "000852";
+  private static final String SZCI_INDEX_CODE = "399001";
 
-  public CSI1000IndexService(
+  public SZCIHistoryService(
       final MarketService marketService,
       final MarketIndexRepository marketIndexRepository,
       final Executor taskExecutor) {
@@ -35,23 +36,25 @@ public class CSI1000IndexService {
     this.taskExecutor = taskExecutor;
   }
 
-  public List<MarketIndex> getCSI1000IndexDaily(LocalDate startDate) {
+  public List<MarketIndex> getSortedShenzhenIndexHistory(LocalDate startDate) {
     Optional<LocalDate> earliestTradeDateInDB =
-        marketIndexRepository.findEarliestTradeDateByIndexCode(CSI1000_CODE);
+        marketIndexRepository.findEarliestTradeDateByIndexCode(SZCI_INDEX_CODE);
     if (earliestTradeDateInDB.isEmpty()) {
-      List<MarketIndex> marketIndexes = getCSI1000IndexDailyFromAPI(startDate);
+      List<MarketIndex> marketIndexes = getMarketIndices(startDate);
       List<MarketIndexEntity> entities =
           marketIndexes.stream()
               .filter(MarketIndex::checkValid)
               .map(EntityConverter::convertToEntity)
               .toList();
       marketIndexRepository.saveAll(entities);
-      return marketIndexes;
+      return marketIndexes.stream()
+          .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+          .toList();
     }
     LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
     LocalDate latestTradeDateValueInDB =
         marketIndexRepository
-            .findLatestTradeDateByIndexCode(CSI1000_CODE)
+            .findLatestTradeDateByIndexCode(SZCI_INDEX_CODE)
             .orElse(earliestTradeDateValueInDB);
 
     CompletableFuture.runAsync(
@@ -61,14 +64,15 @@ public class CSI1000IndexService {
             taskExecutor)
         .exceptionally(
             ex -> {
-              log.error("Failed from API getSortedStockLimitView: {}", ex.getMessage());
+              log.error("Failed from API getShanghaiIndexHistory: {}", ex.getMessage());
               return null;
             });
 
     List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
-        marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI1000_CODE);
+        marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SZCI_INDEX_CODE);
     return allByTradeDateGreaterThanOrEqualTo.stream()
         .map(EntityConverter::convertToModel)
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
         .toList();
   }
 
@@ -76,7 +80,7 @@ public class CSI1000IndexService {
       LocalDate startDate,
       LocalDate earliestTradeDateValueInDB,
       LocalDate latestTradeDateValueInDB) {
-    List<MarketIndex> marketIndexs = getCSI1000IndexDailyFromAPI(startDate);
+    List<MarketIndex> marketIndexs = getMarketIndices(startDate);
     List<MarketIndexEntity> entitiesToSave =
         marketIndexs.stream()
             .filter(
@@ -97,10 +101,10 @@ public class CSI1000IndexService {
     marketIndexRepository.saveAll(entitiesToSave);
   }
 
-  private List<MarketIndex> getCSI1000IndexDailyFromAPI(LocalDate startDate) {
-    List<MarketIndex> marketIndex =
-        marketService.getMarketIndex(CSI1000_CODE, startDate, KLineTypeEnum.DAILY);
-    return marketIndex.stream()
+  private List<MarketIndex> getMarketIndices(LocalDate startDate) {
+    List<MarketIndex> marketIndexs =
+        marketService.getMarketIndex(SZCI_INDEX_CODE, startDate, KLineTypeEnum.DAILY);
+    return marketIndexs.stream()
         .filter(
             index -> {
               LocalDate tradeDate = index.getTradeDate();

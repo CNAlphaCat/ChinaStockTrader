@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { getOnePercentVolatilityFunds } from '../services/sseIndexHistoryService';
+import { getOnePercentVolatilityFunds } from '../../services/indexHistoryService';
 
 ChartJS.register(
   CategoryScale,
@@ -22,16 +22,18 @@ ChartJS.register(
   Legend
 );
 
+const TITLE = '上证指数1%波动率所需资金量（亿）';
+
 const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
       {
-        label: '上证指数 1% 波动率资金量(亿)',
+        label: TITLE,
         data: [],
         fill: false,
-        backgroundColor: 'rgba(153,102,255,0.4)',
-        borderColor: 'rgba(153,102,255,1)',
+        backgroundColor: 'rgba(75,192,192,0.4)',
+        borderColor: 'rgba(75,192,192,1)',
       },
     ],
   });
@@ -58,11 +60,11 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
             labels: labels,
             datasets: [
               {
-                label: '上证指数 1% 波动率资金量(亿)',
+                label: TITLE,
                 data: values,
                 fill: false,
-                backgroundColor: 'rgba(153,102,255,0.4)',
-                borderColor: 'rgba(153,102,255,1)',
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
               },
             ],
           });
@@ -84,7 +86,7 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
 
   return (
     <div>
-      <h2>上证指数1%波动率所需资金量（亿）</h2>
+      <h2>{TITLE}</h2>
       <Line
         data={chartData}
         options={{
@@ -103,7 +105,7 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
             },
             title: {
               display: true,
-              text: '上证指数1%波动率所需资金量（亿）',
+              text: TITLE,
               font: {
                 size: 20,
               },

@@ -8,7 +8,7 @@ import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
-import cn.alphacat.chinastocktrader.util.TimeUtil;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
@@ -50,10 +50,11 @@ public class SSEIndexHistoryService {
     Optional<LocalDate> earliestTradeDateInDB =
         marketIndexRepository.findEarliestTradeDateByIndexCode(SSE_INDEX_CODE);
     if (earliestTradeDateInDB.isEmpty()) {
-      List<MarketIndex> marketIndexes = getAdataMarketIndices(startDate);
+      List<MarketIndex> marketIndexes = getMarketIndices(startDate);
       List<MarketIndexEntity> entities =
           marketIndexes.stream()
               .filter(MarketIndex::checkValid)
+              .sorted(Comparator.comparing(MarketIndex::getTradeDate))
               .map(EntityConverter::convertToEntity)
               .toList();
       marketIndexRepository.saveAll(entities);
@@ -80,6 +81,7 @@ public class SSEIndexHistoryService {
         marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);
     return allByTradeDateGreaterThanOrEqualTo.stream()
         .map(EntityConverter::convertToModel)
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
         .toList();
   }
 
@@ -87,7 +89,7 @@ public class SSEIndexHistoryService {
       LocalDate startDate,
       LocalDate earliestTradeDateValueInDB,
       LocalDate latestTradeDateValueInDB) {
-    List<MarketIndex> marketIndexs = getAdataMarketIndices(startDate);
+    List<MarketIndex> marketIndexs = getMarketIndices(startDate);
     List<MarketIndexEntity> entitiesToSave =
         marketIndexs.stream()
             .filter(
@@ -95,7 +97,7 @@ public class SSEIndexHistoryService {
                   if (!index.checkValid()) {
                     return false;
                   }
-                  if (index.getTradeDate().isEqual(LocalDate.now())) {
+                  if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
                     return false;
                   }
                   if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
@@ -108,14 +110,18 @@ public class SSEIndexHistoryService {
     marketIndexRepository.saveAll(entitiesToSave);
   }
 
-  private List<MarketIndex> getAdataMarketIndices(LocalDate startDate) {
+  private List<MarketIndex> getMarketIndices(LocalDate startDate) {
     List<MarketIndex> marketIndexs =
         marketService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineTypeEnum.DAILY);
-    if (TimeUtil.isAfterStockCloseTime()) {
-      return marketIndexs;
-    }
     return marketIndexs.stream()
-        .filter(index -> !index.getTradeDate().isEqual(LocalDate.now()))
+        .filter(
+            index -> {
+              LocalDate tradeDate = index.getTradeDate();
+              if (tradeDate == null) {
+                return false;
+              }
+              return !tradeDate.isEqual(LocalDateUtil.getNow());
+            })
         .toList();
   }
 }

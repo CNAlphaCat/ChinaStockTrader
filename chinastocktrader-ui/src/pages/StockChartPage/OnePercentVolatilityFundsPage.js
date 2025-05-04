@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import OnePercentVolatilityFundsChart from '../../components/OnePercentVolatilityFundsChart';
+import OnePercentVolatilityFundsChart from '../../components/marketindex/OnePercentVolatilityFundsChart';
 
 const OnePercentVolatilityFundsPage = () => {
     const getDefaultStartDate = () => {

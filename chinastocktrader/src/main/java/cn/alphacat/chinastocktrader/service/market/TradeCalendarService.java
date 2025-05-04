@@ -6,6 +6,7 @@ import cn.alphacat.chinastockdata.model.SZSECalendar;
 import cn.alphacat.chinastocktrader.entity.TradeCalendarEntity;
 import cn.alphacat.chinastocktrader.repository.TradeCalendarRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -39,14 +40,14 @@ public class TradeCalendarService {
                 if (tradeDate.isBefore(startDate)) {
                   return false;
                 }
-                if (tradeDate.isAfter(LocalDate.now())) {
+                if (tradeDate.isAfter(LocalDateUtil.getNow())) {
                   return false;
                 }
                 return true;
               })
           .toList();
     }
-    int year = LocalDate.now().getYear();
+    int year = LocalDateUtil.getNow().getYear();
     List<SZSECalendar> tradeCalendar = szseTradeCalendarService.getTradeCalendar(year);
 
     List<TradeCalendarEntity> entitiesSaveToDB =
@@ -59,24 +60,12 @@ public class TradeCalendarService {
               if (tradeDate.isBefore(startDate)) {
                 return false;
               }
-              if (tradeDate.isAfter(LocalDate.now())) {
+              if (tradeDate.isAfter(LocalDateUtil.getNow())) {
                 return false;
               }
               return true;
             })
         .toList();
-  }
-
-  public LocalDate getPreTradeDate() {
-    LocalDate queryDate = LocalDate.now().minusDays(30);
-    List<SZSECalendar> tradeCalendarInThirtyDays = getTradeCalendarInThirtyDays(queryDate);
-    Optional<LocalDate> first =
-        tradeCalendarInThirtyDays.stream()
-            .filter(item -> item.getTradeStatus() == TradeStatusEnum.TRADE)
-            .sorted(Comparator.comparing(SZSECalendar::getTradeDate).reversed())
-            .map(SZSECalendar::getTradeDate)
-            .findFirst();
-    return first.orElse(null);
   }
 
   public SZSECalendar getTradeCalendar(LocalDate date) {

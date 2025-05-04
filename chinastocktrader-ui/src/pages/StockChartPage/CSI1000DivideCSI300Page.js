@@ -1,5 +1,5 @@
 import React, { useState } from 'react';
-import CSI1000DivideCSI300Chart from '../../components/CSI1000DivideCSI300Chart';
+import CSI1000DivideCSI300Chart from '../../components/marketindex/CSI1000DivideCSI300Chart';
 
 const CSI1000DivideCSI300Page = () => {
     const getDefaultStartDate = () => {

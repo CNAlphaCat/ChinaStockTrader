@@ -7,7 +7,9 @@ import cn.alphacat.chinastockdata.model.stock.StockLimitDownSummary;
 import cn.alphacat.chinastockdata.model.stock.StockLimitUpSummary;
 import cn.alphacat.chinastocktrader.entity.StockLimitEntity;
 import cn.alphacat.chinastocktrader.repository.StockLimitRepository;
+import cn.alphacat.chinastocktrader.util.AlgorithmUtil;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import cn.alphacat.chinastocktrader.view.StockLimitView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -49,7 +51,11 @@ public class MarketStatisticService {
                 log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
                 return null;
               });
-
+      dataInDB.forEach(
+          item ->
+              item.setSentimentScore(
+                  AlgorithmUtil.getStockLimitSentimentScore(
+                      item.getLimitUpCount(), item.getLimitDownCount())));
       return dataInDB;
     }
     Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
@@ -62,9 +68,12 @@ public class MarketStatisticService {
                 date -> {
                   StockLimitView stockLimitView = new StockLimitView();
                   stockLimitView.setTradeDate(date);
-                  stockLimitView.setLimitDownCount(
-                      stockLimitDownSummary.get(date).getLimitDownCount());
-                  stockLimitView.setLimitUpCount(stockLimitUpSummary.get(date).getLimitUpCount());
+                  Integer limitDownCount = stockLimitDownSummary.get(date).getLimitDownCount();
+                  stockLimitView.setLimitDownCount(limitDownCount);
+                  Integer limitUpCount = stockLimitUpSummary.get(date).getLimitUpCount();
+                  stockLimitView.setLimitUpCount(limitUpCount);
+                  stockLimitView.setSentimentScore(
+                      AlgorithmUtil.getStockLimitSentimentScore(limitUpCount, limitDownCount));
                   return stockLimitView;
                 })
             .toList();
@@ -99,7 +108,7 @@ public class MarketStatisticService {
                   if (tradeDate == null) {
                     return false;
                   }
-                  if (tradeDate.isEqual(LocalDate.now())) {
+                  if (tradeDate.isEqual(LocalDateUtil.getNow())) {
                     return false;
                   }
                   return tradeDate.isAfter(latestTradeDateValueInDB);
@@ -110,7 +119,7 @@ public class MarketStatisticService {
   }
 
   public Map<LocalDate, StockLimitDownSummary> getStockLimitDownSummary() {
-    LocalDate startDate = LocalDate.now().minusDays(30);
+    LocalDate startDate = LocalDateUtil.getNow().minusDays(30);
     List<SZSECalendar> tradeCalendarInThirtyDays =
         tradeCalendarService.getTradeCalendarInThirtyDays(startDate);
 
@@ -137,7 +146,7 @@ public class MarketStatisticService {
   }
 
   public Map<LocalDate, StockLimitUpSummary> getStockLimitUpSummary() {
-    LocalDate startDate = LocalDate.now().minusDays(30);
+    LocalDate startDate = LocalDateUtil.getNow().minusDays(30);
     List<SZSECalendar> tradeCalendarInThirtyDays =
         tradeCalendarService.getTradeCalendarInThirtyDays(startDate);
 

@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { getTreasuryBondData } from '../services/treasuryBondService';
+import { getShanghaiIndexHistory, getShenzhenIndexHistory } from '../../services/indexHistoryService';
 
 ChartJS.register(
     CategoryScale,
@@ -22,18 +22,20 @@ ChartJS.register(
     Legend
 );
 
-const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
+const TITLE = '沪深两市成交量（亿）';
+
+const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
             {
-                label: '中国十年期国债收益率',
+                label: '上海市场成交量',
                 data: [],
                 fill: false,
                 backgroundColor: 'rgba(153,102,255,0.4)',
                 borderColor: 'rgba(153,102,255,1)',
             }, {
-                label: '美国十年期国债收益率',
+                label: '深圳市场成交量',
                 data: [],
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
@@ -53,36 +55,38 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
         fetchTimeoutRef.current = setTimeout(async () => {
             if (!startDate) return;
             try {
-                const data = await getTreasuryBondData(startDate);
+                const shanghaiIndexHistory = await getShanghaiIndexHistory(startDate);
+                const shenzhenIndexHistory = await getShenzhenIndexHistory(startDate);
 
-                if (Array.isArray(data)) {
-                    const labels = data.map((item) => item.solarDate);
-                    const chinaTenYearTreasuryBondYield = data.map((item) => item.tenYearTreasuryBondYield);
-                    const usTenYearTreasuryBondYield = data.map((item) => item.tenYearUSTreasuryBondYield);
-
-                    setChartData({
-                        labels: labels,
-                        datasets: [
-                            {
-                                label: '中国十年期国债收益率',
-                                data: chinaTenYearTreasuryBondYield,
-                                fill: false,
-                                backgroundColor: 'rgba(153,102,255,0.4)',
-                                borderColor: 'rgba(153,102,255,1)',
-                                spanGaps: true
-                            }, {
-                                label: '美国十年期国债收益率',
-                                data: usTenYearTreasuryBondYield,
-                                fill: false,
-                                backgroundColor: 'rgba(75,192,192,0.4)',
-                                borderColor: 'rgba(75,192,192,1)',
-                                spanGaps: true,
-                            }
-                        ],
-                    });
-                } else {
-                    console.error('Invalid data format:', data);
+                if (!Array.isArray(shanghaiIndexHistory) || !Array.isArray(shenzhenIndexHistory)) {
+                    console.error('Invalid data format:', shanghaiIndexHistory, shenzhenIndexHistory);
+                    return;
                 }
+                const labels = shanghaiIndexHistory.map((item) => item.tradeDate);
+                const shanghaiAmount = shanghaiIndexHistory.map((item) => item.amount / 100000000);
+                const shenzhenAmount = shenzhenIndexHistory.map((item) => item.amount / 100000000);
+
+                setChartData({
+                    labels: labels,
+                    datasets: [
+                        {
+                            label: '上海市场成交量',
+                            data: shanghaiAmount,
+                            fill: false,
+                            backgroundColor: 'rgba(153,102,255,0.4)',
+                            borderColor: 'rgba(153,102,255,1)',
+                            spanGaps: true
+                        }, {
+                            label: '深圳市场成交量',
+                            data: shenzhenAmount,
+                            fill: false,
+                            backgroundColor: 'rgba(75,192,192,0.4)',
+                            borderColor: 'rgba(75,192,192,1)',
+                            spanGaps: true,
+                        }
+                    ],
+                });
+
             } catch (error) {
                 console.error('Error fetching chart data:', error);
             }
@@ -96,7 +100,7 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
 
     return (
         <div>
-            <h2>中美十年期国债收益率</h2>
+            <h2>{TITLE}</h2>
             <Line
                 data={chartData}
                 options={{
@@ -115,7 +119,7 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
                         },
                         title: {
                             display: true,
-                            text: '中美十年期国债收益率',
+                            text: TITLE,
                             font: {
                                 size: 20,
                             },
@@ -143,4 +147,4 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
     );
 };
 
-export default TenYearUSTreasuryBondChart;
+export default MarketAmountSummaryChart;

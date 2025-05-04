@@ -10,8 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import annotationPlugin from 'chartjs-plugin-annotation';
-import { getCSI1000DivideCSI300 } from '../services/indexStatisticService';
+import { getStockLimitSummary } from '../../services/marketStatisticService';
 
 ChartJS.register(
     CategoryScale,
@@ -22,18 +21,19 @@ ChartJS.register(
     Tooltip,
     Legend
 );
-ChartJS.register(annotationPlugin);
 
-const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
+const TITLE= '涨跌停情绪对数比率指数'
+
+const StockLimitLogOddsChart = ({ showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
             {
-                label: '中证1000/中证300 指数比值',
+                label: TITLE,
                 data: [],
                 fill: false,
-                backgroundColor: 'rgba(153,102,255,0.4)',
-                borderColor: 'rgba(153,102,255,1)',
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
             },
         ],
     });
@@ -41,30 +41,27 @@ const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
     const fetchTimeoutRef = useRef(null);
 
     useEffect(() => {
-
         if (fetchTimeoutRef.current) {
             clearTimeout(fetchTimeoutRef.current);
         }
-
-        if (!startDate) return;
         fetchTimeoutRef.current = setTimeout(async () => {
             try {
-                const data = await getCSI1000DivideCSI300(startDate);
+                const data = await getStockLimitSummary();
 
                 if (Array.isArray(data)) {
-                    const labels = data.map((item) => item.date);
-                    const values = data.map((item) => item.dividedValue);
+                    const labels = data.map((item) => item.tradeDate);
+                    const sentimentScore = data.map((item) => item.sentimentScore);
 
                     setChartData({
                         labels: labels,
                         datasets: [
                             {
-                                label: '中证1000/中证300 指数比值',
-                                data: values,
+                                label: TITLE,
+                                data: sentimentScore,
                                 fill: false,
-                                backgroundColor: 'rgba(153,102,255,0.4)',
-                                borderColor: 'rgba(153,102,255,1)',
-                            },
+                                backgroundColor: 'rgba(75,192,192,0.4)',
+                                borderColor: 'rgba(75,192,192,1)',
+                            }
                         ],
                     });
                 } else {
@@ -80,11 +77,29 @@ const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
                 clearTimeout(fetchTimeoutRef.current);
             }
         };
-    }, [startDate]);
+    }, []);
 
     return (
         <div>
-            <h2>中证1000/中证300 指数比值</h2>
+            <h2>{TITLE}</h2>
+            <div style={{ marginBottom: '20px', fontSize: '16px' }}>
+
+            <div style={{
+                textAlign: 'center',
+                padding: '10px',
+                backgroundColor: '#f9f9f9',
+                borderRadius: '5px',
+                display: 'inline-block',
+                margin: '10px auto'
+            }}>
+                <code>
+                    sentimentScore = log<sub>e</sub>[(涨停家数 + ε) / (跌停家数 + ε)]
+                </code>
+            </div>
+            <p style={{ marginTop: '10px', fontStyle: 'italic' }}>
+                其中 ε = 0.1，用于防止除零错误。
+            </p>
+        </div>
             <Line
                 data={chartData}
                 options={{
@@ -103,37 +118,10 @@ const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
                         },
                         title: {
                             display: true,
-                            text: '中证1000/中证300 指数比值',
+                            text: TITLE,
                             font: {
                                 size: 20,
                             },
-                        }, annotation: {
-                            annotations: {
-                                line_if_policy: {
-                                    type: 'line',
-                                    yMin: 1.62,
-                                    yMax: 1.62,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        enabled: false,
-                                        content: '80%',
-                                    }
-                                },
-                                line_im_policy: {
-                                    type: 'line',
-                                    yMin: 1.42,
-                                    yMax: 1.42,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        enabled: false,
-                                        content: '20%',
-                                    }
-                                }
-                            }
                         }
                     },
                     scales: {
@@ -158,4 +146,4 @@ const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
     );
 };
 
-export default CSI1000DivideCSI300Chart;
+export default StockLimitLogOddsChart;

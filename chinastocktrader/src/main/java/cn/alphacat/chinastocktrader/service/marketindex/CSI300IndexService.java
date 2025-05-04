@@ -9,16 +9,19 @@ import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
+import cn.alphacat.chinastocktrader.service.market.TradeCalendarService;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
-import cn.alphacat.chinastocktrader.util.TimeUtil;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Collections;
 import java.util.List;
 import java.util.Map;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 
 import cn.alphacat.chinastockdata.enums.LuguLuguIndexPEEnums;
@@ -33,6 +36,8 @@ public class CSI300IndexService {
 
   private final MarketIndexRepository marketIndexRepository;
   private final IndexPERepository indexPERepository;
+
+  private final Map<String, Boolean> requestCache = new ConcurrentHashMap<>();
 
   private static final String CSI300_CODE = "000300";
 
@@ -99,7 +104,7 @@ public class CSI300IndexService {
                   if (!index.checkValid()) {
                     return false;
                   }
-                  if (index.getTradeDate().isEqual(LocalDate.now())) {
+                  if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
                     return false;
                   }
                   if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
@@ -133,8 +138,7 @@ public class CSI300IndexService {
         indexPERepository.findTop1DateByIndexCodeOrderByDateDesc(
             LuguLuguIndexPEEnums.SCI300.getIndeCode());
     if (top1DateByIndexCodeOrderByDateDesc.isEmpty()) {
-      Map<LocalDate, IndexPE> stockIndexPE =
-          leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+      Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
       List<IndexPEEntity> entities =
           stockIndexPE.values().stream()
               .filter(
@@ -143,7 +147,7 @@ public class CSI300IndexService {
                     if (date == null) {
                       return false;
                     }
-                    return !date.isEqual(LocalDate.now());
+                    return !date.isEqual(LocalDateUtil.getNow());
                   })
               .map(EntityConverter::convertToEntity)
               .toList();
@@ -152,56 +156,57 @@ public class CSI300IndexService {
       return;
     }
     LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
-    if (!isCSI300IndexPENeedUpdate(latestDateInDB)) {
-      return;
-    }
 
-    Map<LocalDate, IndexPE> stockIndexPE =
-        leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+    Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
     List<IndexPEEntity> entities =
         stockIndexPE.entrySet().stream()
-            .filter(entry -> entry.getKey().isAfter(latestDateInDB))
+            .filter(
+                entry -> {
+                  LocalDate localDate = entry.getKey();
+                  if (localDate.isEqual(LocalDateUtil.getNow())) {
+                    return false;
+                  }
+                  return localDate.isAfter(latestDateInDB);
+                })
             .map(item -> EntityConverter.convertToEntity(item.getValue()))
             .toList();
-    if (!TimeUtil.isAfterStockCloseTime()) {
-      entities =
-          entities.stream().filter(entity -> !entity.getDate().isEqual(LocalDate.now())).toList();
-    }
     indexPERepository.saveAll(entities);
-  }
-
-  private static boolean isCSI300IndexPENeedUpdate(LocalDate latestDateInDB) {
-    LocalDate preTradeDate = getPreTradeDate();
-    if (latestDateInDB.isEqual(preTradeDate) || latestDateInDB.isAfter(preTradeDate)) {
-      return false;
-    }
-    if (TimeUtil.isBeforeOrEqualStockCloseTime()) {
-      return false;
-    }
-    return true;
-  }
-
-  private static LocalDate getPreTradeDate() {
-    LocalDate now = LocalDate.now();
-    int dayOfWeek = now.getDayOfWeek().getValue();
-
-    if (dayOfWeek >= 1 && dayOfWeek <= 5) {
-      return now;
-    } else if (dayOfWeek == 6) {
-      return now.minusDays(1);
-    } else {
-      return now.minusDays(2);
-    }
   }
 
   private List<MarketIndex> getCSI300IndexDailyFromAPI(LocalDate startDate) {
     List<MarketIndex> marketIndex =
         marketService.getMarketIndex(CSI300_CODE, startDate, KLineTypeEnum.DAILY);
-    if (TimeUtil.isAfterStockCloseTime()) {
-      return marketIndex;
-    }
     return marketIndex.stream()
-        .filter(index -> !index.getTradeDate().isEqual(LocalDate.now()))
+        .filter(
+            index -> {
+              LocalDate tradeDate = index.getTradeDate();
+              if (tradeDate == null) {
+                return false;
+              }
+              return !tradeDate.isEqual(LocalDateUtil.getNow());
+            })
         .toList();
+  }
+
+  private Map<LocalDate, IndexPE> getStockIndexPE() {
+    String todayKey = LocalDateUtil.getNow().toString();
+    if (Boolean.TRUE.equals(requestCache.get(todayKey))) {
+      return Collections.emptyMap();
+    }
+    synchronized (this) {
+      if (Boolean.TRUE.equals(requestCache.get(todayKey))) {
+        return Collections.emptyMap();
+      }
+      try {
+        Map<LocalDate, IndexPE> result =
+            leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+        requestCache.put(todayKey, true);
+        return result;
+      } catch (Exception e) {
+        requestCache.remove(todayKey);
+        log.error("Failed to getStockIndexPE: {}", e.getMessage());
+        return Collections.emptyMap();
+      }
+    }
   }
 }
