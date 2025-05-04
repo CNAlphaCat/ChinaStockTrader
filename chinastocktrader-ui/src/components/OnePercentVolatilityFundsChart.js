@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
   Chart as ChartJS,
@@ -36,9 +36,17 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
     ],
   });
 
+  const fetchTimeoutRef = useRef(null);
+
   useEffect(() => {
-    const fetchChartData = async () => {
-      if (!startDate) return;
+    if (fetchTimeoutRef.current) {
+      clearTimeout(fetchTimeoutRef.current);
+    }
+
+
+    if (!startDate) return;
+
+    fetchTimeoutRef.current = setTimeout(async () => {
       try {
         const data = await getOnePercentVolatilityFunds(startDate);
 
@@ -64,9 +72,14 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
       } catch (error) {
         console.error('Error fetching chart data:', error);
       }
-    };
+    }, 300);
 
-    fetchChartData();
+
+    return () => {
+      if (fetchTimeoutRef.current) {
+        clearTimeout(fetchTimeoutRef.current);
+      }
+    };
   }, [startDate]);
 
   return (

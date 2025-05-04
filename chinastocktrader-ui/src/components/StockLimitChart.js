@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -36,8 +36,13 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
         ],
     });
 
+    const fetchTimeoutRef = useRef(null);
+
     useEffect(() => {
-        const fetchChartData = async () => {
+        if (fetchTimeoutRef.current) {
+            clearTimeout(fetchTimeoutRef.current);
+        }
+        fetchTimeoutRef.current = setTimeout(async () => {
             try {
                 const data = await getStockLimitSummary();
 
@@ -71,9 +76,13 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
             } catch (error) {
                 console.error('Error fetching chart data:', error);
             }
-        };
+        }, 300);
 
-        fetchChartData();
+        return () => {
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current);
+            }
+        };
     }, []);
 
     return (

@@ -1,4 +1,4 @@
-import React, { useState, useEffect } from 'react';
+import React, { useState, useEffect, useRef } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
     Chart as ChartJS,
@@ -43,8 +43,14 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
         ],
     });
 
+    const fetchTimeoutRef = useRef(null);
+
     useEffect(() => {
-        const fetchChartData = async () => {
+        if (fetchTimeoutRef.current) {
+            clearTimeout(fetchTimeoutRef.current);
+        }
+
+        fetchTimeoutRef.current = setTimeout(async () => {
             if (!startDate) return;
             try {
                 const data = await getTreasuryBondData(startDate);
@@ -80,9 +86,12 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
             } catch (error) {
                 console.error('Error fetching chart data:', error);
             }
+        }, 300);
+        return () => {
+            if (fetchTimeoutRef.current) {
+                clearTimeout(fetchTimeoutRef.current);
+            }
         };
-
-        fetchChartData();
     }, [startDate]);
 
     return (
