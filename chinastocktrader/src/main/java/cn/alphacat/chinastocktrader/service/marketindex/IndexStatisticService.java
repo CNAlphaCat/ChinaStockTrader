@@ -1,7 +1,7 @@
 package cn.alphacat.chinastocktrader.service.marketindex;
 
-import cn.alphacat.chinastockdata.model.IndexPE;
-import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastockdata.model.marketindex.IndexPE;
+import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import cn.alphacat.chinastocktrader.model.CSI1000DivideCSI300;
 import cn.alphacat.chinastocktrader.model.EquityPremiumIndex;

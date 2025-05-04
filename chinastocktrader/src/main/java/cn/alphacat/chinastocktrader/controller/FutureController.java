@@ -1,6 +1,6 @@
 package cn.alphacat.chinastocktrader.controller;
 
-import cn.alphacat.chinastockdata.model.FutureMarketOverview;
+import cn.alphacat.chinastockdata.model.future.FutureMarketOverview;
 import cn.alphacat.chinastocktrader.service.future.ChinaStockTraderFutureService;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

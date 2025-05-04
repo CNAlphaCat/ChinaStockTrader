@@ -1,12 +1,12 @@
 package cn.alphacat.chinastocktrader.util;
 
-import cn.alphacat.chinastockdata.model.IndexPE;
-import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastockdata.model.SZSECalendar;
+import cn.alphacat.chinastockdata.model.marketindex.IndexPE;
+import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
-import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
-import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
+import cn.alphacat.chinastocktrader.entity.*;
 
-import cn.alphacat.chinastocktrader.entity.TreasuryBondEntity;
+import cn.alphacat.chinastocktrader.view.StockLimitView;
 import org.springframework.stereotype.Component;
 
 @Component
@@ -105,5 +105,35 @@ public class EntityConverter {
         .chinaGDPGrowthRate(entity.getChinaGDPGrowthRate())
         .usGDPGrowthRate(entity.getUsGDPGrowthRate())
         .build();
+  }
+
+  public static TradeCalendarEntity convertToEntity(SZSECalendar tradeCalendar) {
+    TradeCalendarEntity entity = new TradeCalendarEntity();
+    entity.setTradeDate(tradeCalendar.getTradeDate());
+    entity.setTradeStatus(tradeCalendar.getTradeStatus());
+    return entity;
+  }
+
+  public static SZSECalendar convertToModel(TradeCalendarEntity entity) {
+    SZSECalendar tradeCalendar = new SZSECalendar();
+    tradeCalendar.setTradeDate(entity.getTradeDate());
+    tradeCalendar.setTradeStatus(entity.getTradeStatus());
+    return tradeCalendar;
+  }
+
+  public static StockLimitEntity convertToEntity(StockLimitView model) {
+    StockLimitEntity entity = new StockLimitEntity();
+    entity.setTradeDate(model.getTradeDate());
+    entity.setLimitUpCount(model.getLimitUpCount());
+    entity.setLimitDownCount(model.getLimitDownCount());
+    return entity;
+  }
+
+  public static StockLimitView convertToModel(StockLimitEntity entity) {
+    StockLimitView model = new StockLimitView();
+    model.setTradeDate(entity.getTradeDate());
+    model.setLimitUpCount(entity.getLimitUpCount());
+    model.setLimitDownCount(entity.getLimitDownCount());
+    return model;
   }
 }

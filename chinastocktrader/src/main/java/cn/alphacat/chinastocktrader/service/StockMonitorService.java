@@ -1,6 +1,6 @@
 package cn.alphacat.chinastocktrader.service;
 
-import cn.alphacat.chinastockdata.model.StockMin;
+import cn.alphacat.chinastockdata.model.stock.StockMin;
 import cn.alphacat.chinastockdata.stock.StockService;
 import cn.alphacat.chinastocktrader.model.StockMinBO;
 import lombok.extern.slf4j.Slf4j;

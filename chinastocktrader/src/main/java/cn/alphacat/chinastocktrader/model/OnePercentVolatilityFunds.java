@@ -1,6 +1,6 @@
 package cn.alphacat.chinastocktrader.model;
 
-import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import lombok.Data;
 
 import java.math.BigDecimal;

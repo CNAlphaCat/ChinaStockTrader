@@ -2,7 +2,7 @@ package cn.alphacat.chinastocktrader.service.marketindex;
 
 import cn.alphacat.chinastockdata.enums.KLineTypeEnum;
 import cn.alphacat.chinastockdata.market.MarketService;
-import cn.alphacat.chinastockdata.model.MarketIndex;
+import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 
 import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;

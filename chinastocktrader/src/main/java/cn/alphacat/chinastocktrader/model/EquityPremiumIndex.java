@@ -1,6 +1,6 @@
 package cn.alphacat.chinastocktrader.model;
 
-import cn.alphacat.chinastockdata.model.IndexPE;
+import cn.alphacat.chinastockdata.model.marketindex.IndexPE;
 import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import lombok.Builder;
 import lombok.Data;
