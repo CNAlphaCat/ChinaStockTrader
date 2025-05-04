@@ -99,6 +99,9 @@ public class CSI300IndexService {
                   if (!index.checkValid()) {
                     return false;
                   }
+                  if (index.getTradeDate().isEqual(LocalDate.now())) {
+                    return false;
+                  }
                   if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
                     return true;
                   }
@@ -133,11 +136,17 @@ public class CSI300IndexService {
       Map<LocalDate, IndexPE> stockIndexPE =
           leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
       List<IndexPEEntity> entities =
-          stockIndexPE.values().stream().map(EntityConverter::convertToEntity).toList();
-      if (!TimeUtil.isAfterStockCloseTime()) {
-        entities =
-            entities.stream().filter(entity -> !entity.getDate().isEqual(LocalDate.now())).toList();
-      }
+          stockIndexPE.values().stream()
+              .filter(
+                  entity -> {
+                    LocalDate date = entity.getDate();
+                    if (date == null) {
+                      return false;
+                    }
+                    return !date.isEqual(LocalDate.now());
+                  })
+              .map(EntityConverter::convertToEntity)
+              .toList();
 
       indexPERepository.saveAll(entities);
       return;

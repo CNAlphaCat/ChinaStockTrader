@@ -1,5 +1,6 @@
 package cn.alphacat.chinastocktrader.service.market;
 
+import cn.alphacat.chinastockdata.enums.TradeStatusEnum;
 import cn.alphacat.chinastockdata.market.SZSETradeCalendarService;
 import cn.alphacat.chinastockdata.model.SZSECalendar;
 import cn.alphacat.chinastocktrader.entity.TradeCalendarEntity;
@@ -9,6 +10,7 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
 
@@ -63,6 +65,18 @@ public class TradeCalendarService {
               return true;
             })
         .toList();
+  }
+
+  public LocalDate getPreTradeDate() {
+    LocalDate queryDate = LocalDate.now().minusDays(30);
+    List<SZSECalendar> tradeCalendarInThirtyDays = getTradeCalendarInThirtyDays(queryDate);
+    Optional<LocalDate> first =
+        tradeCalendarInThirtyDays.stream()
+            .filter(item -> item.getTradeStatus() == TradeStatusEnum.TRADE)
+            .sorted(Comparator.comparing(SZSECalendar::getTradeDate).reversed())
+            .map(SZSECalendar::getTradeDate)
+            .findFirst();
+    return first.orElse(null);
   }
 
   public SZSECalendar getTradeCalendar(LocalDate date) {

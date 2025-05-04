@@ -66,13 +66,15 @@ public class SSEIndexHistoryService {
             .orElse(earliestTradeDateValueInDB);
 
     CompletableFuture.runAsync(
-        () ->
-            getDataFromAPIAndSaveToDB(
-                startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-        taskExecutor).exceptionally(ex -> {
-      log.error("Failed from API getShanghaiIndexHistory: {}", ex.getMessage());
-      return null;
-    });
+            () ->
+                getDataFromAPIAndSaveToDB(
+                    startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
+            taskExecutor)
+        .exceptionally(
+            ex -> {
+              log.error("Failed from API getShanghaiIndexHistory: {}", ex.getMessage());
+              return null;
+            });
 
     List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
         marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);
@@ -91,6 +93,9 @@ public class SSEIndexHistoryService {
             .filter(
                 index -> {
                   if (!index.checkValid()) {
+                    return false;
+                  }
+                  if (index.getTradeDate().isEqual(LocalDate.now())) {
                     return false;
                   }
                   if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {

@@ -82,6 +82,9 @@ public class CSI1000IndexService {
                   if (!index.checkValid()) {
                     return false;
                   }
+                  if (index.getTradeDate().isEqual(LocalDate.now())) {
+                    return false;
+                  }
                   if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
                     return true;
                   }

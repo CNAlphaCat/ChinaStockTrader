@@ -44,10 +44,11 @@ public class MarketStatisticService {
     if (maxTradeDateOpt.isPresent()) {
       LocalDate maxTradeDate = maxTradeDateOpt.get();
       CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(maxTradeDate), taskExecutor)
-          .exceptionally(ex -> {
-            log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
-            return null;
-          });
+          .exceptionally(
+              ex -> {
+                log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
+                return null;
+              });
 
       return dataInDB;
     }
@@ -93,7 +94,16 @@ public class MarketStatisticService {
     List<StockLimitEntity> stockLimitEntities =
         list.stream()
             .filter(
-                stockLimitView -> stockLimitView.getTradeDate().isAfter(latestTradeDateValueInDB))
+                stockLimitView -> {
+                  LocalDate tradeDate = stockLimitView.getTradeDate();
+                  if (tradeDate == null) {
+                    return false;
+                  }
+                  if (tradeDate.isEqual(LocalDate.now())) {
+                    return false;
+                  }
+                  return tradeDate.isAfter(latestTradeDateValueInDB);
+                })
             .map(EntityConverter::convertToEntity)
             .toList();
     stockLimitRepository.saveAll(stockLimitEntities);
