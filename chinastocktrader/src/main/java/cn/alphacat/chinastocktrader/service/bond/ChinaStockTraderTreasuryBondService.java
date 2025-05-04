@@ -9,6 +9,8 @@ import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
 import java.util.*;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Service
@@ -16,11 +18,15 @@ public class ChinaStockTraderTreasuryBondService {
   private final TreasuryBondService treasuryBondService;
   private final TreasuryBondRepository treasuryBondRepository;
 
+  private final Executor taskExecutor;
+
   public ChinaStockTraderTreasuryBondService(
       final TreasuryBondService treasuryBondService,
-      final TreasuryBondRepository treasuryBondRepository) {
+      final TreasuryBondRepository treasuryBondRepository,
+      final Executor taskExecutor) {
     this.treasuryBondService = treasuryBondService;
     this.treasuryBondRepository = treasuryBondRepository;
+    this.taskExecutor = taskExecutor;
   }
 
   public LinkedHashMap<LocalDate, TreasuryBond> getSortedTreasuryBondDataMap(LocalDate startDate) {
@@ -49,17 +55,27 @@ public class ChinaStockTraderTreasuryBondService {
           .toList();
     }
     LocalDate earliestSolarDateValueInDB = earliestSolarDateInDB.get();
+    LocalDate latestTradeDateValueInDB =
+        treasuryBondRepository.findMaxSolarDate().orElse(earliestSolarDateValueInDB);
 
-    if (startDate.isAfter(earliestSolarDateValueInDB)
-        || startDate.isEqual(earliestSolarDateValueInDB)) {
-      List<TreasuryBondEntity> bySolarDateIsGreaterThanEqual =
-          treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate);
-      return bySolarDateIsGreaterThanEqual.stream()
-          .map(EntityConverter::convertToModel)
-          .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
-          .toList();
-    }
+    CompletableFuture.runAsync(
+        () ->
+            getDataFromAPIAndSaveToDB(
+                startDate, latestTradeDateValueInDB, earliestSolarDateValueInDB),
+        taskExecutor);
 
+    List<TreasuryBondEntity> bySolarDateIsGreaterThanEqual =
+        treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate);
+    return bySolarDateIsGreaterThanEqual.stream()
+        .map(EntityConverter::convertToModel)
+        .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
+        .toList();
+  }
+
+  private void getDataFromAPIAndSaveToDB(
+      LocalDate startDate,
+      LocalDate latestTradeDateValueInDB,
+      LocalDate earliestSolarDateValueInDB) {
     Map<LocalDate, TreasuryBond> tenYearTreasuryBond =
         treasuryBondService.getTreasuryBondDataMap(startDate);
     List<TreasuryBondEntity> treasuryBondEntities =
@@ -67,13 +83,16 @@ public class ChinaStockTraderTreasuryBondService {
             .filter(
                 treasuryBond -> {
                   LocalDate solarDate = treasuryBond.getSolarDate();
-                  return solarDate != null && solarDate.isBefore(earliestSolarDateValueInDB);
+                  if (solarDate == null) {
+                    return false;
+                  }
+                  if (solarDate.isAfter(latestTradeDateValueInDB)) {
+                    return true;
+                  }
+                  return solarDate.isBefore(earliestSolarDateValueInDB);
                 })
             .map(EntityConverter::convertToEntity)
             .collect(Collectors.toCollection(() -> new ArrayList<>(tenYearTreasuryBond.size())));
     treasuryBondRepository.saveAll(treasuryBondEntities);
-    return tenYearTreasuryBond.values().stream()
-        .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
-        .toList();
   }
 }

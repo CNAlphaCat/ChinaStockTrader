@@ -20,21 +20,21 @@ public class IndexStatisticController {
     this.indexStatisticService = indexStatisticService;
   }
 
-  @RequestMapping("/CSI1000DivideCSI300/{startDate}")
+  @GetMapping("/CSI1000DivideCSI300/{startDate}")
   public List<CSI1000DivideCSI300> getCSI300DivideCSI1000(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-    return indexStatisticService.getCSI1000DivideCSI300(startDate);
+    return indexStatisticService.getSortedCSI1000DivideCSI300(startDate);
   }
 
-  @PostMapping("/CSI300indexPE/{startDate}")
+  @GetMapping("/CSI300indexPE/{startDate}")
   public Map<LocalDate, IndexPE> getCSI300IndexPE(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
     return indexStatisticService.getSortedCSI300IndexPEMap(startDate);
   }
 
   @GetMapping("/equitypremiumindex/{startDate}")
-  public List<EquityPremiumIndex> getEquityPremiumIndex(
+  public List<EquityPremiumIndex> getSortedEquityPremiumIndex(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-    return indexStatisticService.getEquityPremiumIndexWithPercentile(startDate);
+    return indexStatisticService.getSortedEquityPremiumIndexWithPercentile(startDate);
   }
 }

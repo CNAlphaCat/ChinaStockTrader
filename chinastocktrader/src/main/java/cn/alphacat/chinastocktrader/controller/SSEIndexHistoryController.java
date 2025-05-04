@@ -23,6 +23,6 @@ public class SSEIndexHistoryController {
   @GetMapping("/onePercentVolatilityFunds/{startDate}")
   public List<OnePercentVolatilityFunds> getShanghaiIndexHistory(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-    return sseIndexHistoryService.getOnePercentVolatilityFunds(startDate);
+    return sseIndexHistoryService.getSortedOnePercentVolatilityFunds(startDate);
   }
 }

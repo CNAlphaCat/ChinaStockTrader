@@ -61,25 +61,45 @@ public class CSI300IndexService {
       return marketIndexes;
     }
     LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
+    LocalDate latestTradeDateValueInDB =
+        marketIndexRepository
+            .findLatestTradeDateByIndexCode(CSI300_CODE)
+            .orElse(earliestTradeDateValueInDB);
 
-    if (startDate.isAfter(earliestTradeDateValueInDB)
-        || startDate.isEqual(earliestTradeDateValueInDB)) {
-      List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
-          marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE);
-      return allByTradeDateGreaterThanOrEqualTo.stream()
-          .map(EntityConverter::convertToModel)
-          .toList();
-    }
+    CompletableFuture.runAsync(
+        () ->
+            getDataFromAPIAndSaveToDB(
+                startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
+        taskExecutor);
+
+    List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
+        marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE);
+
+    return allByTradeDateGreaterThanOrEqualTo.stream()
+        .map(EntityConverter::convertToModel)
+        .toList();
+  }
+
+  private void getDataFromAPIAndSaveToDB(
+      LocalDate startDate,
+      LocalDate earliestTradeDateValueInDB,
+      LocalDate latestTradeDateValueInDB) {
     List<MarketIndex> marketIndexs = getCSI300IndexDailyFromAPI(startDate);
     List<MarketIndexEntity> entitiesToSave =
         marketIndexs.stream()
             .filter(
-                index ->
-                    index.getTradeDate().isBefore(earliestTradeDateValueInDB) && index.checkValid())
+                index -> {
+                  if (!index.checkValid()) {
+                    return false;
+                  }
+                  if(index.getTradeDate().isBefore(earliestTradeDateValueInDB)){
+                    return true;
+                  }
+                  return index.getTradeDate().isAfter(latestTradeDateValueInDB);
+                })
             .map(EntityConverter::convertToEntity)
             .toList();
     marketIndexRepository.saveAll(entitiesToSave);
-    return marketIndexs;
   }
 
   public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
@@ -111,7 +131,7 @@ public class CSI300IndexService {
       return;
     }
     LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
-    if (!needUpdate(latestDateInDB)) {
+    if (!isCSI300IndexPENeedUpdate(latestDateInDB)) {
       return;
     }
 
@@ -129,7 +149,7 @@ public class CSI300IndexService {
     indexPERepository.saveAll(entities);
   }
 
-  private static boolean needUpdate(LocalDate latestDateInDB) {
+  private static boolean isCSI300IndexPENeedUpdate(LocalDate latestDateInDB) {
     LocalDate preTradeDate = getPreTradeDate();
     if (latestDateInDB.isEqual(preTradeDate) || latestDateInDB.isAfter(preTradeDate)) {
       return false;

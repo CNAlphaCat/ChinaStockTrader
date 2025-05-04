@@ -8,28 +8,40 @@ import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.TimeUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
+import java.util.Comparator;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 public class SSEIndexHistoryService {
   private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
 
+  private final Executor taskExecutor;
+
   private static final String SSE_INDEX_CODE = "000001";
 
   public SSEIndexHistoryService(
-      final MarketService marketService, final MarketIndexRepository marketIndexRepository) {
+      final MarketService marketService,
+      final MarketIndexRepository marketIndexRepository,
+      final Executor taskExecutor) {
     this.marketService = marketService;
     this.marketIndexRepository = marketIndexRepository;
+    this.taskExecutor = taskExecutor;
   }
 
-  public List<OnePercentVolatilityFunds> getOnePercentVolatilityFunds(LocalDate startDate) {
+  public List<OnePercentVolatilityFunds> getSortedOnePercentVolatilityFunds(LocalDate startDate) {
     List<MarketIndex> shanghaiIndexHistory = getShanghaiIndexHistory(startDate);
-    return shanghaiIndexHistory.stream().map(OnePercentVolatilityFunds::new).toList();
+    return shanghaiIndexHistory.stream()
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+        .map(OnePercentVolatilityFunds::new)
+        .toList();
   }
 
   public List<MarketIndex> getShanghaiIndexHistory(LocalDate startDate) {
@@ -46,30 +58,52 @@ public class SSEIndexHistoryService {
       return marketIndexes;
     }
     LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
+    LocalDate latestTradeDateValueInDB =
+        marketIndexRepository
+            .findLatestTradeDateByIndexCode(SSE_INDEX_CODE)
+            .orElse(earliestTradeDateValueInDB);
 
-    if (startDate.isAfter(earliestTradeDateValueInDB)
-        || startDate.isEqual(earliestTradeDateValueInDB)) {
-      List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
-          marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);
-      return allByTradeDateGreaterThanOrEqualTo.stream()
-          .map(EntityConverter::convertToModel)
-          .toList();
-    }
+    CompletableFuture.runAsync(
+        () ->
+            getDataFromAPIAndSaveToDB(
+                startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
+        taskExecutor);
+
+    List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
+        marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);
+    return allByTradeDateGreaterThanOrEqualTo.stream()
+        .map(EntityConverter::convertToModel)
+        .toList();
+  }
+
+  private void getDataFromAPIAndSaveToDB(
+      LocalDate startDate,
+      LocalDate earliestTradeDateValueInDB,
+      LocalDate latestTradeDateValueInDB) {
     List<MarketIndex> marketIndexs = getAdataMarketIndices(startDate);
     List<MarketIndexEntity> entitiesToSave =
         marketIndexs.stream()
             .filter(
-                index ->
-                    index.getTradeDate().isBefore(earliestTradeDateValueInDB) && index.checkValid())
+                index -> {
+                  if (!index.checkValid()) {
+                    return false;
+                  }
+                  if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
+                    return true;
+                  }
+                  return index.getTradeDate().isAfter(latestTradeDateValueInDB);
+                })
             .map(EntityConverter::convertToEntity)
             .toList();
     marketIndexRepository.saveAll(entitiesToSave);
-    return marketIndexs;
   }
 
   private List<MarketIndex> getAdataMarketIndices(LocalDate startDate) {
     List<MarketIndex> marketIndexs =
         marketService.getMarketIndex(SSE_INDEX_CODE, startDate, KLineTypeEnum.DAILY);
+    if (TimeUtil.isAfterStockCloseTime()) {
+      return marketIndexs;
+    }
     return marketIndexs.stream()
         .filter(index -> !index.getTradeDate().isEqual(LocalDate.now()))
         .toList();

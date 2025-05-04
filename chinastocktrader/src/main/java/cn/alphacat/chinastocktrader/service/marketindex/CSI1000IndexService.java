@@ -12,18 +12,25 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.List;
 import java.util.Optional;
+import java.util.concurrent.CompletableFuture;
+import java.util.concurrent.Executor;
 
 @Service
 public class CSI1000IndexService {
   private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
 
+  private final Executor taskExecutor;
+
   private static final String CSI1000_CODE = "000852";
 
   public CSI1000IndexService(
-      final MarketService marketService, final MarketIndexRepository marketIndexRepository) {
+      final MarketService marketService,
+      final MarketIndexRepository marketIndexRepository,
+      final Executor taskExecutor) {
     this.marketService = marketService;
     this.marketIndexRepository = marketIndexRepository;
+    this.taskExecutor = taskExecutor;
   }
 
   public List<MarketIndex> getCSI1000IndexDaily(LocalDate startDate) {
@@ -40,25 +47,44 @@ public class CSI1000IndexService {
       return marketIndexes;
     }
     LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
+    LocalDate latestTradeDateValueInDB =
+        marketIndexRepository
+            .findLatestTradeDateByIndexCode(CSI1000_CODE)
+            .orElse(earliestTradeDateValueInDB);
 
-    if (startDate.isAfter(earliestTradeDateValueInDB)
-        || startDate.isEqual(earliestTradeDateValueInDB)) {
-      List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
-          marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI1000_CODE);
-      return allByTradeDateGreaterThanOrEqualTo.stream()
-          .map(EntityConverter::convertToModel)
-          .toList();
-    }
+    CompletableFuture.runAsync(
+        () ->
+            getDataFromAPIAndSaveToDB(
+                startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
+        taskExecutor);
+
+    List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
+        marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI1000_CODE);
+    return allByTradeDateGreaterThanOrEqualTo.stream()
+        .map(EntityConverter::convertToModel)
+        .toList();
+  }
+
+  private void getDataFromAPIAndSaveToDB(
+      LocalDate startDate,
+      LocalDate earliestTradeDateValueInDB,
+      LocalDate latestTradeDateValueInDB) {
     List<MarketIndex> marketIndexs = getCSI1000IndexDailyFromAPI(startDate);
     List<MarketIndexEntity> entitiesToSave =
         marketIndexs.stream()
             .filter(
-                index ->
-                    index.getTradeDate().isBefore(earliestTradeDateValueInDB) && index.checkValid())
+                index -> {
+                  if (!index.checkValid()) {
+                    return false;
+                  }
+                  if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
+                    return true;
+                  }
+                  return index.getTradeDate().isAfter(latestTradeDateValueInDB);
+                })
             .map(EntityConverter::convertToEntity)
             .toList();
     marketIndexRepository.saveAll(entitiesToSave);
-    return marketIndexs;
   }
 
   private List<MarketIndex> getCSI1000IndexDailyFromAPI(LocalDate startDate) {

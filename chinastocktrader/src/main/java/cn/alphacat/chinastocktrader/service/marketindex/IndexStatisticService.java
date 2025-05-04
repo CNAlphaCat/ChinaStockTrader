@@ -6,6 +6,7 @@ import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import cn.alphacat.chinastocktrader.model.CSI1000DivideCSI300;
 import cn.alphacat.chinastocktrader.model.EquityPremiumIndex;
 import cn.alphacat.chinastocktrader.service.bond.ChinaStockTraderTreasuryBondService;
+import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
@@ -34,7 +35,7 @@ public class IndexStatisticService {
     Map<LocalDate, TreasuryBond> treasuryBondMap =
         chinaStockTraderTreasuryBondService.getSortedTreasuryBondDataMap(startDate);
 
-    List<LocalDate> commonDates = findCommonDates(csi300IndexPE, treasuryBondMap);
+    List<LocalDate> commonDates = LocalDateUtil.findCommonDates(csi300IndexPE, treasuryBondMap);
     List<EquityPremiumIndex> result = new ArrayList<>();
 
     for (LocalDate date : commonDates) {
@@ -49,7 +50,7 @@ public class IndexStatisticService {
     return result;
   }
 
-  public List<EquityPremiumIndex> getEquityPremiumIndexWithPercentile(LocalDate startDate) {
+  public List<EquityPremiumIndex> getSortedEquityPremiumIndexWithPercentile(LocalDate startDate) {
     List<EquityPremiumIndex> result = getEquityPremiumIndex(startDate);
 
     List<BigDecimal> indexValues =
@@ -78,7 +79,7 @@ public class IndexStatisticService {
                 .setScale(2, RoundingMode.HALF_UP));
       }
     }
-    return result;
+    return result.stream().sorted(Comparator.comparing(EquityPremiumIndex::getDate)).toList();
   }
 
   public LinkedHashMap<LocalDate, IndexPE> getSortedCSI300IndexPEMap(LocalDate startDate) {
@@ -93,21 +94,18 @@ public class IndexStatisticService {
                 LinkedHashMap::new));
   }
 
-  public List<CSI1000DivideCSI300> getCSI1000DivideCSI300(LocalDate startDate) {
-    List<MarketIndex> csi300IndexDaily = getCSI300IndexDaily(startDate);
-    List<MarketIndex> csi1000IndexDaily = getCSI1000IndexDaily(startDate);
+  public List<CSI1000DivideCSI300> getSortedCSI1000DivideCSI300(LocalDate startDate) {
+    LinkedHashMap<LocalDate, MarketIndex> csi300IndexDaily = getCSI300IndexDaily(startDate);
+    LinkedHashMap<LocalDate, MarketIndex> csi1000IndexDaily = getCSI1000IndexDaily(startDate);
 
-    if (csi300IndexDaily.size() != csi1000IndexDaily.size()) {
-      return null;
-    }
+    List<LocalDate> commonDates =
+        LocalDateUtil.findCommonDates(csi300IndexDaily, csi1000IndexDaily);
 
     List<CSI1000DivideCSI300> resultList = new ArrayList<>();
-    for (int i = 0; i < csi300IndexDaily.size(); i++) {
-      MarketIndex csi300Index = csi300IndexDaily.get(i);
-      MarketIndex csi1000Index = csi1000IndexDaily.get(i);
-      if (csi300Index.getTradeDate().isBefore(startDate)) {
-        continue;
-      }
+    for (LocalDate date : commonDates) {
+      MarketIndex csi300Index = csi300IndexDaily.get(date);
+      MarketIndex csi1000Index = csi1000IndexDaily.get(date);
+
       CSI1000DivideCSI300 CSI1000DivideCSI300BO = new CSI1000DivideCSI300();
       CSI1000DivideCSI300BO.setDate(csi300Index.getTradeDate());
       BigDecimal result =
@@ -116,22 +114,28 @@ public class IndexStatisticService {
 
       resultList.add(CSI1000DivideCSI300BO);
     }
-    return resultList;
+    return resultList.stream().sorted(Comparator.comparing(CSI1000DivideCSI300::getDate)).toList();
   }
 
-  private List<LocalDate> findCommonDates(Map<LocalDate, ?> map1, Map<LocalDate, ?> map2) {
-    return map1.keySet().stream().filter(map2::containsKey).sorted().collect(Collectors.toList());
+  private LinkedHashMap<LocalDate, MarketIndex> getCSI300IndexDaily(LocalDate startDate) {
+    return csi300IndexService.getCSI300IndexDaily(startDate).stream()
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+        .collect(
+            Collectors.toMap(
+                MarketIndex::getTradeDate,
+                mi -> mi,
+                (existing, replacement) -> existing,
+                LinkedHashMap::new));
   }
 
-  private List<MarketIndex> getCSI300IndexDaily(LocalDate startDate) {
-    List<MarketIndex> csi300IndexDaily = csi300IndexService.getCSI300IndexDaily(startDate);
-    csi300IndexDaily.sort(Comparator.comparing(MarketIndex::getTradeDate));
-    return csi300IndexDaily;
-  }
-
-  private List<MarketIndex> getCSI1000IndexDaily(LocalDate startDate) {
-    List<MarketIndex> csi1000IndexDaily = csi1000IndexService.getCSI1000IndexDaily(startDate);
-    csi1000IndexDaily.sort(Comparator.comparing(MarketIndex::getTradeDate));
-    return csi1000IndexDaily;
+  private LinkedHashMap<LocalDate, MarketIndex> getCSI1000IndexDaily(LocalDate startDate) {
+    return csi1000IndexService.getCSI1000IndexDaily(startDate).stream()
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+        .collect(
+            Collectors.toMap(
+                MarketIndex::getTradeDate,
+                mi -> mi,
+                (existing, replacement) -> existing,
+                LinkedHashMap::new));
   }
 }

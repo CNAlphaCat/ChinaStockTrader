@@ -57,7 +57,7 @@ const StockMonitorPage = () => {
         return () => {
             document.title = originalTitle;
         };
-    }, [stocks]);
+    }, [stocks, notifications.title]);
 
     useEffect(() => {
         if (!notifications.sound) return;
@@ -75,7 +75,7 @@ const StockMonitorPage = () => {
         };
     
         checkForAlerts();
-    }, [stocks]);
+    }, [stocks, notifications.sound]);
 
     useEffect(() => {
         if (!notifications.alert) return;
@@ -96,7 +96,7 @@ const StockMonitorPage = () => {
         }
     
         sendNotification();
-    }, [stocks]);
+    }, [stocks, notifications.alert]);
 
     return (
         <div style={{ padding: '20px' }}>

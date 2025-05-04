@@ -13,4 +13,7 @@ public interface TreasuryBondRepository extends JpaRepository<TreasuryBondEntity
 
   @Query("SELECT MIN(t.solarDate) FROM TreasuryBondEntity t")
   Optional<LocalDate> findMinSolarDate();
+
+  @Query("SELECT MAX(t.solarDate) FROM TreasuryBondEntity t")
+  Optional<LocalDate> findMaxSolarDate();
 }

@@ -1,33 +1,26 @@
 import React, { useState } from 'react';
 import TenYearTreasuryBondChart from '../../components/TenYearTreasuryBondChart';
 import EquityPremiumIndexChart from '../../components/EquityPremiumIndexChart';
-
+import CSI1000DivideCSI300Chart from '../../components/CSI1000DivideCSI300Chart';
+import OnePercentVolatilityFundsChart from '../../components/OnePercentVolatilityFundsChart';
 const DailySummaryPage = () => {
-    const getDefaultStartDate = () => {
+
+    const getDefaultStartDate = (monthsAgo) => {
         const today = new Date();
-        today.setMonth(today.getMonth() - 12);
+        today.setMonth(today.getMonth() - monthsAgo);
         return today.toISOString().split('T')[0];
     };
 
-    const [startDate, setStartDate] = useState(getDefaultStartDate());
-
-    const handleDateChange = (event) => {
-        setStartDate(event.target.value);
-    };
+    const [startDate1Y] = useState(getDefaultStartDate(12));
+    const [startDate5Y] = useState(getDefaultStartDate(60));
+    const [startDate10Y] = useState(getDefaultStartDate(120));
 
     return (
         <div>
-            <div>
-                <label htmlFor="start-date">选择起始日期: </label>
-                <input
-                    type="date"
-                    id="start-date"
-                    value={startDate}
-                    onChange={handleDateChange}
-                />
-            </div>
-            <TenYearTreasuryBondChart startDate={startDate} />
-            <EquityPremiumIndexChart startDate={startDate} />
+            <EquityPremiumIndexChart startDate={startDate10Y}  showPointsDetail={false} />
+            <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
+            <OnePercentVolatilityFundsChart startDate={startDate1Y}  showPointsDetail={false} />  
+            <TenYearTreasuryBondChart startDate={startDate5Y}  showPointsDetail={false} />
         </div>
     );
 };

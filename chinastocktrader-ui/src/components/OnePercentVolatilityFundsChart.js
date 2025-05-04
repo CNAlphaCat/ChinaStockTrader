@@ -1,28 +1,28 @@
 import React, { useState, useEffect } from 'react';
 import { Line } from 'react-chartjs-2';
 import {
-    Chart as ChartJS,
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend,
-  } from 'chart.js';
+  Chart as ChartJS,
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend,
+} from 'chart.js';
 import { getOnePercentVolatilityFunds } from '../services/sseIndexHistoryService';
 
 ChartJS.register(
-    CategoryScale,
-    LinearScale,
-    PointElement,
-    LineElement,
-    Title,
-    Tooltip,
-    Legend
-  );
+  CategoryScale,
+  LinearScale,
+  PointElement,
+  LineElement,
+  Title,
+  Tooltip,
+  Legend
+);
 
-const OnePercentVolatilityFundsChart = ({startDate}) => {
+const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
@@ -38,34 +38,34 @@ const OnePercentVolatilityFundsChart = ({startDate}) => {
 
   useEffect(() => {
     const fetchChartData = async () => {
-      if (!startDate) return; 
-        try {
-          const data = await getOnePercentVolatilityFunds(startDate);
-    
-          if (Array.isArray(data)) {
-            console.log('Data:', data);
-            const labels = data.map((item) => item.date);
-            const values = data.map((item) => item.displayFunds);
-    
-            setChartData({
-              labels: labels,
-              datasets: [
-                {
-                  label: '上证指数 1% 波动率资金量(亿)',
-                  data: values,
-                  fill: false,
-                  backgroundColor: 'rgba(75,192,192,0.4)',
-                  borderColor: 'rgba(75,192,192,1)',
-                },
-              ],
-            });
-          } else {
-            console.error('Invalid data format:', data);
-          }
-        } catch (error) {
-          console.error('Error fetching chart data:', error);
+      if (!startDate) return;
+      try {
+        const data = await getOnePercentVolatilityFunds(startDate);
+
+        if (Array.isArray(data)) {
+          console.log('Data:', data);
+          const labels = data.map((item) => item.date);
+          const values = data.map((item) => item.displayFunds);
+
+          setChartData({
+            labels: labels,
+            datasets: [
+              {
+                label: '上证指数 1% 波动率资金量(亿)',
+                data: values,
+                fill: false,
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
+              },
+            ],
+          });
+        } else {
+          console.error('Invalid data format:', data);
         }
-      };
+      } catch (error) {
+        console.error('Error fetching chart data:', error);
+      }
+    };
 
     fetchChartData();
   }, [startDate]);
@@ -73,7 +73,48 @@ const OnePercentVolatilityFundsChart = ({startDate}) => {
   return (
     <div>
       <h2>上证指数1%波动率所需资金量（亿）</h2>
-      <Line data={chartData} />
+      <Line
+        data={chartData}
+        options={{
+          elements: {
+            point: {
+              radius: showPointsDetail ? 3 : 0,
+            },
+          },
+          plugins: {
+            legend: {
+              labels: {
+                font: {
+                  size: 20,
+                },
+              },
+            },
+            title: {
+              display: true,
+              text: '上证指数1%波动率所需资金量（亿）',
+              font: {
+                size: 20,
+              },
+            }
+          },
+          scales: {
+            x: {
+              ticks: {
+                font: {
+                  size: 14,
+                },
+              },
+            },
+            y: {
+              ticks: {
+                font: {
+                  size: 14,
+                },
+              },
+            },
+          },
+        }}
+      />
     </div>
   );
 };

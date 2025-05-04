@@ -10,6 +10,8 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
+
 import { getEquityPremiumIndex } from '../services/indexStatisticService';
 
 ChartJS.register(
@@ -21,8 +23,9 @@ ChartJS.register(
     Tooltip,
     Legend
 );
+ChartJS.register(annotationPlugin);
 
-const EquityPremiumIndexChart = ({ startDate }) => {
+const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
@@ -73,7 +76,75 @@ const EquityPremiumIndexChart = ({ startDate }) => {
     return (
         <div>
             <h2>股权溢价指数</h2>
-            <Line data={chartData} />
+            <Line
+                data={chartData}
+                options={{
+                    plugins: {
+                        elements: {
+                            point: {
+                                radius: showPointsDetail ? 3 : 0,
+                            },
+                        },
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 20,
+                                },
+                            },
+                        },
+                        title: {
+                            display: true,
+                            text: '股权溢价指数历史百分位（当前值占历史数据的百分比）',
+                            font: {
+                                size: 20,
+                            },
+                        }, annotation: {
+                            annotations: {
+                                line80: {
+                                    type: 'line',
+                                    yMin: 80,
+                                    yMax: 80,
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: false,
+                                        content: '80%',
+                                    }
+                                },
+                                line20: {
+                                    type: 'line',
+                                    yMin: 20,
+                                    yMax: 20,
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: false,
+                                        content: '20%',
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                },
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                },
+                            },
+                        },
+                    },
+                }}
+            />
         </div>
     );
 };

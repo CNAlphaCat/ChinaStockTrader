@@ -10,6 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
+import annotationPlugin from 'chartjs-plugin-annotation';
 import { getCSI1000DivideCSI300 } from '../services/indexStatisticService';
 
 ChartJS.register(
@@ -21,8 +22,9 @@ ChartJS.register(
     Tooltip,
     Legend
 );
+ChartJS.register(annotationPlugin);
 
-const CSI1000DivideCSI300Chart = ({ startDate }) => {
+const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
@@ -72,7 +74,75 @@ const CSI1000DivideCSI300Chart = ({ startDate }) => {
     return (
         <div>
             <h2>中证1000/中证300 指数比值</h2>
-            <Line data={chartData} />
+            <Line
+                data={chartData}
+                options={{
+                    elements: {
+                        point: {
+                            radius: showPointsDetail ? 3 : 0,
+                        },
+                    },
+                    plugins: {
+                        legend: {
+                            labels: {
+                                font: {
+                                    size: 20,
+                                },
+                            },
+                        },
+                        title: {
+                            display: true,
+                            text: '中证1000/中证300 指数比值',
+                            font: {
+                                size: 20,
+                            },
+                        }, annotation: {
+                            annotations: {
+                                line_if_policy: {
+                                    type: 'line',
+                                    yMin: 1.62,
+                                    yMax: 1.62,
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: false,
+                                        content: '80%',
+                                    }
+                                },
+                                line_im_policy: {
+                                    type: 'line',
+                                    yMin: 1.42,
+                                    yMax: 1.42,
+                                    borderColor: 'red',
+                                    borderWidth: 2,
+                                    borderDash: [5, 5],
+                                    label: {
+                                        enabled: false,
+                                        content: '20%',
+                                    }
+                                }
+                            }
+                        }
+                    },
+                    scales: {
+                        x: {
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                },
+                            },
+                        },
+                        y: {
+                            ticks: {
+                                font: {
+                                    size: 14,
+                                },
+                            },
+                        },
+                    },
+                }}
+            />
         </div>
     );
 };
