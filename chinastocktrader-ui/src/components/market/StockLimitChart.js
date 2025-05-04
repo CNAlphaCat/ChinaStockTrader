@@ -35,10 +35,18 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
             },
+            {
+                label: TITLE,
+                data: [],
+                fill: false,
+                backgroundColor: 'rgba(75,192,192,0.4)',
+                borderColor: 'rgba(75,192,192,1)',
+            }
         ],
     });
 
     const fetchTimeoutRef = useRef(null);
+    const [endDate, setEndDate] = useState('');
 
     useEffect(() => {
         if (fetchTimeoutRef.current) {
@@ -50,6 +58,11 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
 
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.tradeDate);
+
+
+                    const lastDate = labels[labels.length - 1];
+                    setEndDate(lastDate);
+
                     const limitUpCount = data.map((item) => item.limitUpCount);
                     const limitDownCount = data.map((item) => item.limitDownCount);
 
@@ -107,7 +120,12 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
         <div>
             <h2>{TITLE}</h2>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-                最新值 - 涨停：{limitUpValue}；跌停：{limitDownValue}
+            最新值 -
+                <div style={{ marginLeft: '20px', marginTop: '5px' }}>
+                   涨停：{limitUpValue}（{endDate}）
+                   <br />
+                   跌停：{limitDownValue}（{endDate}）
+                </div>
             </div>
             <Line
                 data={chartData}

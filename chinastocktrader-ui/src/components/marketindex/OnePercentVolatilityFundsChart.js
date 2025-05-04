@@ -93,7 +93,7 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) 
     <div>
       <h2>{TITLE}</h2>
       <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-        最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'}
+        最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'}（{endDate}）
       </div>
       <Line
         data={chartData}

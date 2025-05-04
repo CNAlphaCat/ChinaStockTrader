@@ -97,7 +97,7 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                 历史上有多少时间比现在的股权溢价指数低
             </p>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-                最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'}
+                最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）
             </div>
             <Line
                 data={chartData}

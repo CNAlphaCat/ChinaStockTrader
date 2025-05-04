@@ -58,7 +58,6 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
             try {
                 const data = await getTreasuryBondData(startDate);
 
-
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.solarDate);
                     const lastDate = labels[labels.length - 1];
@@ -121,7 +120,12 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
         <div>
             <h2>{TITLE}</h2>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-                最新值 - 中国：{lastChinaValue}；美国：{lastUsValue}
+                最新值 -
+                <div style={{ marginLeft: '20px', marginTop: '5px' }}>
+                    中国：{lastChinaValue} （{endDate}）
+                    <br />
+                    美国：{lastUsValue} （{endDate}）
+                </div>
             </div>
             <Line
                 data={chartData}

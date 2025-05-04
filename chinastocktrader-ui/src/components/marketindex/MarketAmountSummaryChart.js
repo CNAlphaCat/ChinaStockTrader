@@ -123,7 +123,12 @@ const MarketAmountSummaryChart = ({ startDate, showPointsDetail = true }) => {
         <div>
             <h2>{TITLE}</h2>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-                最新值 - 上海：{shanghai}；深圳：{shenzhen}
+                最新值 -
+                <div style={{ marginLeft: '20px', marginTop: '5px' }}>
+                    上海：{shanghai} （{endDate}）
+                    <br />
+                    深圳：{shenzhen} （{endDate}）
+                </div>
             </div>
             <Line
                 data={chartData}
