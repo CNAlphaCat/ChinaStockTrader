@@ -22,7 +22,7 @@ ChartJS.register(
   Legend
 );
 
-const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail }) => {
+const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail = true }) => {
   const [chartData, setChartData] = useState({
     labels: [],
     datasets: [
@@ -30,8 +30,8 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail }) => {
         label: '上证指数 1% 波动率资金量(亿)',
         data: [],
         fill: false,
-        backgroundColor: 'rgba(75,192,192,0.4)',
-        borderColor: 'rgba(75,192,192,1)',
+        backgroundColor: 'rgba(153,102,255,0.4)',
+        borderColor: 'rgba(153,102,255,1)',
       },
     ],
   });
@@ -43,7 +43,6 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail }) => {
         const data = await getOnePercentVolatilityFunds(startDate);
 
         if (Array.isArray(data)) {
-          console.log('Data:', data);
           const labels = data.map((item) => item.date);
           const values = data.map((item) => item.displayFunds);
 
@@ -54,8 +53,8 @@ const OnePercentVolatilityFundsChart = ({ startDate, showPointsDetail }) => {
                 label: '上证指数 1% 波动率资金量(亿)',
                 data: values,
                 fill: false,
-                backgroundColor: 'rgba(75,192,192,0.4)',
-                borderColor: 'rgba(75,192,192,1)',
+                backgroundColor: 'rgba(153,102,255,0.4)',
+                borderColor: 'rgba(153,102,255,1)',
               },
             ],
           });

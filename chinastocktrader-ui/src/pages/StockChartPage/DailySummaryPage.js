@@ -3,6 +3,7 @@ import TenYearTreasuryBondChart from '../../components/TenYearTreasuryBondChart'
 import EquityPremiumIndexChart from '../../components/EquityPremiumIndexChart';
 import CSI1000DivideCSI300Chart from '../../components/CSI1000DivideCSI300Chart';
 import OnePercentVolatilityFundsChart from '../../components/OnePercentVolatilityFundsChart';
+import StockLimitChart from '../../components/StockLimitChart';
 const DailySummaryPage = () => {
 
     const getDefaultStartDate = (monthsAgo) => {
@@ -18,6 +19,7 @@ const DailySummaryPage = () => {
     return (
         <div>
             <EquityPremiumIndexChart startDate={startDate10Y}  showPointsDetail={false} />
+            <StockLimitChart showPointsDetail={false} />
             <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
             <OnePercentVolatilityFundsChart startDate={startDate1Y}  showPointsDetail={false} />  
             <TenYearTreasuryBondChart startDate={startDate5Y}  showPointsDetail={false} />

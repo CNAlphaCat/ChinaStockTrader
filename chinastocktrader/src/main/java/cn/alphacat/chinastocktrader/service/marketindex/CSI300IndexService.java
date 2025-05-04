@@ -11,6 +11,7 @@ import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.TimeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -23,6 +24,7 @@ import java.util.concurrent.Executor;
 import cn.alphacat.chinastockdata.enums.LuguLuguIndexPEEnums;
 
 @Service
+@Slf4j
 public class CSI300IndexService {
   private final MarketService marketService;
   private final LeguLeguService leguLeguService;
@@ -67,10 +69,15 @@ public class CSI300IndexService {
             .orElse(earliestTradeDateValueInDB);
 
     CompletableFuture.runAsync(
-        () ->
-            getDataFromAPIAndSaveToDB(
-                startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-        taskExecutor);
+            () ->
+                getDataFromAPIAndSaveToDB(
+                    startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
+            taskExecutor)
+        .exceptionally(
+            ex -> {
+              log.error("Failed from API getCSI300IndexDaily: {}", ex.getMessage());
+              return null;
+            });
 
     List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
         marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE);
@@ -92,7 +99,7 @@ public class CSI300IndexService {
                   if (!index.checkValid()) {
                     return false;
                   }
-                  if(index.getTradeDate().isBefore(earliestTradeDateValueInDB)){
+                  if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
                     return true;
                   }
                   return index.getTradeDate().isAfter(latestTradeDateValueInDB);
@@ -103,7 +110,12 @@ public class CSI300IndexService {
   }
 
   public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
-    CompletableFuture.runAsync(this::getCSI300IndexPEFromAPIAndSaveToDB, taskExecutor);
+    CompletableFuture.runAsync(this::getCSI300IndexPEFromAPIAndSaveToDB, taskExecutor)
+        .exceptionally(
+            ex -> {
+              log.error("Failed from API getCSI300IndexPE: {}", ex.getMessage());
+              return null;
+            });
     List<IndexPEEntity> entities =
         indexPERepository.findByIndexCodeAndDateIsGreaterThanEqual(
             LuguLuguIndexPEEnums.SCI300.getIndeCode(), startDate);

@@ -5,6 +5,7 @@ import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import cn.alphacat.chinastocktrader.entity.TreasuryBondEntity;
 import cn.alphacat.chinastocktrader.repository.TreasuryBondRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -14,6 +15,7 @@ import java.util.concurrent.Executor;
 import java.util.stream.Collectors;
 
 @Service
+@Slf4j
 public class ChinaStockTraderTreasuryBondService {
   private final TreasuryBondService treasuryBondService;
   private final TreasuryBondRepository treasuryBondRepository;
@@ -59,10 +61,15 @@ public class ChinaStockTraderTreasuryBondService {
         treasuryBondRepository.findMaxSolarDate().orElse(earliestSolarDateValueInDB);
 
     CompletableFuture.runAsync(
-        () ->
-            getDataFromAPIAndSaveToDB(
-                startDate, latestTradeDateValueInDB, earliestSolarDateValueInDB),
-        taskExecutor);
+            () ->
+                getDataFromAPIAndSaveToDB(
+                    startDate, latestTradeDateValueInDB, earliestSolarDateValueInDB),
+            taskExecutor)
+        .exceptionally(
+            ex -> {
+              log.error("Failed from API getSortedTreasuryBondDataList: {}", ex.getMessage());
+              return null;
+            });
 
     List<TreasuryBondEntity> bySolarDateIsGreaterThanEqual =
         treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate);

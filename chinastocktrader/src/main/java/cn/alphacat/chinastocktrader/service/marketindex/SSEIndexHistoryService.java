@@ -9,6 +9,7 @@ import cn.alphacat.chinastocktrader.model.OnePercentVolatilityFunds;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.TimeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -19,6 +20,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Service
+@Slf4j
 public class SSEIndexHistoryService {
   private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
@@ -67,7 +69,10 @@ public class SSEIndexHistoryService {
         () ->
             getDataFromAPIAndSaveToDB(
                 startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-        taskExecutor);
+        taskExecutor).exceptionally(ex -> {
+      log.error("Failed from API getShanghaiIndexHistory: {}", ex.getMessage());
+      return null;
+    });
 
     List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
         marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);

@@ -9,6 +9,7 @@ import cn.alphacat.chinastocktrader.entity.StockLimitEntity;
 import cn.alphacat.chinastocktrader.repository.StockLimitRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.view.StockLimitView;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
+@Slf4j
 @Service
 public class MarketStatisticService {
   private final EastMoneyMarketStockLimitService eastMoneyMarketStockLimitService;
@@ -41,7 +43,12 @@ public class MarketStatisticService {
     Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
     if (maxTradeDateOpt.isPresent()) {
       LocalDate maxTradeDate = maxTradeDateOpt.get();
-      CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(maxTradeDate), taskExecutor);
+      CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(maxTradeDate), taskExecutor)
+          .exceptionally(ex -> {
+            log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
+            return null;
+          });
+
       return dataInDB;
     }
     Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();

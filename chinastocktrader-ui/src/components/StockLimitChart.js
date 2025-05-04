@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { getTreasuryBondData } from '../services/treasuryBondService';
+import { getStockLimitSummary } from '../services/marketStatisticService';
 
 ChartJS.register(
     CategoryScale,
@@ -22,55 +22,46 @@ ChartJS.register(
     Legend
 );
 
-const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
+const StockLimitChart = ({ showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
         labels: [],
         datasets: [
             {
-                label: '中国十年期国债收益率',
-                data: [],
-                fill: false,
-                backgroundColor: 'rgba(153,102,255,0.4)',
-                borderColor: 'rgba(153,102,255,1)',
-            }, {
-                label: '美国十年期国债收益率',
+                label: '涨跌停家数',
                 data: [],
                 fill: false,
                 backgroundColor: 'rgba(75,192,192,0.4)',
                 borderColor: 'rgba(75,192,192,1)',
-                spanGaps: true,
-            }
+            },
         ],
     });
 
     useEffect(() => {
         const fetchChartData = async () => {
-            if (!startDate) return;
             try {
-                const data = await getTreasuryBondData(startDate);
+                const data = await getStockLimitSummary();
 
                 if (Array.isArray(data)) {
-                    const labels = data.map((item) => item.solarDate);
-                    const chinaTenYearTreasuryBondYield = data.map((item) => item.tenYearTreasuryBondYield);
-                    const usTenYearTreasuryBondYield = data.map((item) => item.tenYearUSTreasuryBondYield);
+                    const labels = data.map((item) => item.tradeDate);
+                    const limitUpCount = data.map((item) => item.limitUpCount);
+                    const limitDownCount = data.map((item) => item.limitDownCount);
 
                     setChartData({
                         labels: labels,
                         datasets: [
                             {
-                                label: '中国十年期国债收益率',
-                                data: chinaTenYearTreasuryBondYield,
+                                label: '涨停家数',
+                                data: limitUpCount,
                                 fill: false,
                                 backgroundColor: 'rgba(153,102,255,0.4)',
                                 borderColor: 'rgba(153,102,255,1)',
-                                spanGaps: true
-                            }, {
-                                label: '美国十年期国债收益率',
-                                data: usTenYearTreasuryBondYield,
+                            },
+                            {
+                                label: '跌停家数',
+                                data: limitDownCount,
                                 fill: false,
                                 backgroundColor: 'rgba(75,192,192,0.4)',
                                 borderColor: 'rgba(75,192,192,1)',
-                                spanGaps: true,
                             }
                         ],
                     });
@@ -83,11 +74,11 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
         };
 
         fetchChartData();
-    }, [startDate]);
+    }, []);
 
     return (
         <div>
-            <h2>中美十年期国债收益率</h2>
+            <h2>沪深京涨跌停家数</h2>
             <Line
                 data={chartData}
                 options={{
@@ -106,7 +97,7 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
                         },
                         title: {
                             display: true,
-                            text: '中美十年期国债收益率',
+                            text: '沪深京涨跌停家数',
                             font: {
                                 size: 20,
                             },
@@ -134,4 +125,4 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
     );
 };
 
-export default TenYearUSTreasuryBondChart;
+export default StockLimitChart;

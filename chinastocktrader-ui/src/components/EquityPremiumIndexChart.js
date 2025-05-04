@@ -79,12 +79,12 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
             <Line
                 data={chartData}
                 options={{
+                    elements: {
+                        point: {
+                            radius: showPointsDetail ? 3 : 0,
+                        }
+                    },
                     plugins: {
-                        elements: {
-                            point: {
-                                radius: showPointsDetail ? 3 : 0,
-                            },
-                        },
                         legend: {
                             labels: {
                                 font: {

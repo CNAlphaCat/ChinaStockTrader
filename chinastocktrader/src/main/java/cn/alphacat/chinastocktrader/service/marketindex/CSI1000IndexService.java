@@ -7,6 +7,7 @@ import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.TimeUtil;
+import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
@@ -16,6 +17,7 @@ import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
 
 @Service
+@Slf4j
 public class CSI1000IndexService {
   private final MarketService marketService;
   private final MarketIndexRepository marketIndexRepository;
@@ -56,7 +58,10 @@ public class CSI1000IndexService {
         () ->
             getDataFromAPIAndSaveToDB(
                 startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-        taskExecutor);
+        taskExecutor).exceptionally(ex -> {
+      log.error("Failed from API getSortedStockLimitView: {}", ex.getMessage());
+      return null;
+    });
 
     List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualTo =
         marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI1000_CODE);
