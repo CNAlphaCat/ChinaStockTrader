@@ -18,6 +18,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Slf4j
 @Service
@@ -27,6 +28,8 @@ public class MarketStatisticService {
   private final StockLimitRepository stockLimitRepository;
 
   private final Executor taskExecutor;
+
+  private final ReentrantLock lock = new ReentrantLock();
 
   public MarketStatisticService(
       final EastMoneyMarketStockLimitService eastMoneyMarketStockLimitService,
@@ -40,88 +43,114 @@ public class MarketStatisticService {
   }
 
   public List<StockLimitView> getSortedStockLimitView() {
+    Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
+    if (maxTradeDateOpt.isEmpty()) {
+      List<StockLimitView> list = initData();
+      return list.stream().sorted(Comparator.comparing(StockLimitView::getTradeDate)).toList();
+    }
+    CompletableFuture.runAsync(this::getDataFromAPIAndSaveToDB, taskExecutor)
+        .exceptionally(
+            ex -> {
+              log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
+              return null;
+            });
     List<StockLimitView> dataInDB =
         stockLimitRepository.findAll().stream().map(EntityConverter::convertToModel).toList();
-    Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
-    if (maxTradeDateOpt.isPresent()) {
-      LocalDate maxTradeDate = maxTradeDateOpt.get();
-      CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(maxTradeDate), taskExecutor)
-          .exceptionally(
-              ex -> {
-                log.error("Failed from API getSortedStockLimitView : {}", ex.getMessage());
-                return null;
-              });
-      dataInDB.forEach(
-          item ->
-              item.setSentimentScore(
-                  AlgorithmUtil.getStockLimitSentimentScore(
-                      item.getLimitUpCount(), item.getLimitDownCount())));
-      return dataInDB;
-    }
-    Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
-    Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
-    List<StockLimitView> list =
-        stockLimitDownSummary.keySet().stream()
-            .filter(stockLimitUpSummary::containsKey)
-            .sorted()
-            .map(
-                date -> {
-                  StockLimitView stockLimitView = new StockLimitView();
-                  stockLimitView.setTradeDate(date);
-                  Integer limitDownCount = stockLimitDownSummary.get(date).getLimitDownCount();
-                  stockLimitView.setLimitDownCount(limitDownCount);
-                  Integer limitUpCount = stockLimitUpSummary.get(date).getLimitUpCount();
-                  stockLimitView.setLimitUpCount(limitUpCount);
-                  stockLimitView.setSentimentScore(
-                      AlgorithmUtil.getStockLimitSentimentScore(limitUpCount, limitDownCount));
-                  return stockLimitView;
-                })
-            .toList();
-    List<StockLimitEntity> stockLimitEntities =
-        list.stream().map(EntityConverter::convertToEntity).toList();
-    stockLimitRepository.saveAll(stockLimitEntities);
-    return list;
+    dataInDB.forEach(
+        item ->
+            item.setSentimentScore(
+                AlgorithmUtil.getStockLimitSentimentScore(
+                    item.getLimitUpCount(), item.getLimitDownCount())));
+    return dataInDB.stream().sorted(Comparator.comparing(StockLimitView::getTradeDate)).toList();
   }
 
-  private void getDataFromAPIAndSaveToDB(LocalDate latestTradeDateValueInDB) {
-    Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
-    Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
-    List<StockLimitView> list =
-        stockLimitDownSummary.keySet().stream()
-            .filter(stockLimitUpSummary::containsKey)
-            .sorted()
-            .map(
-                date -> {
-                  StockLimitView stockLimitView = new StockLimitView();
-                  stockLimitView.setTradeDate(date);
-                  stockLimitView.setLimitDownCount(
-                      stockLimitDownSummary.get(date).getLimitDownCount());
-                  stockLimitView.setLimitUpCount(stockLimitUpSummary.get(date).getLimitUpCount());
-                  return stockLimitView;
-                })
+  private List<StockLimitView> initData() {
+    lock.lock();
+    try {
+      if (stockLimitRepository.count() > 0) {
+        return stockLimitRepository.findAll().stream()
+            .map(EntityConverter::convertToModel)
             .toList();
-    List<StockLimitEntity> stockLimitEntities =
-        list.stream()
-            .filter(
-                stockLimitView -> {
-                  LocalDate tradeDate = stockLimitView.getTradeDate();
-                  if (tradeDate == null) {
-                    return false;
-                  }
-                  if (tradeDate.isEqual(LocalDateUtil.getNow())) {
-                    return false;
-                  }
-                  return tradeDate.isAfter(latestTradeDateValueInDB);
-                })
-            .map(EntityConverter::convertToEntity)
-            .toList();
-    stockLimitRepository.saveAll(stockLimitEntities);
+      }
+      Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
+      Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
+      List<StockLimitView> list =
+          stockLimitDownSummary.keySet().stream()
+              .filter(stockLimitUpSummary::containsKey)
+              .sorted()
+              .map(
+                  date -> {
+                    StockLimitView stockLimitView = new StockLimitView();
+                    stockLimitView.setTradeDate(date);
+                    Integer limitDownCount = stockLimitDownSummary.get(date).getLimitDownCount();
+                    stockLimitView.setLimitDownCount(limitDownCount);
+                    Integer limitUpCount = stockLimitUpSummary.get(date).getLimitUpCount();
+                    stockLimitView.setLimitUpCount(limitUpCount);
+                    stockLimitView.setSentimentScore(
+                        AlgorithmUtil.getStockLimitSentimentScore(limitUpCount, limitDownCount));
+                    return stockLimitView;
+                  })
+              .toList();
+      List<StockLimitEntity> stockLimitEntities =
+          list.stream()
+              .map(EntityConverter::convertToEntity)
+              .filter(
+                  stockLimitEntity ->
+                      !stockLimitEntity.getTradeDate().isEqual(LocalDateUtil.getNow()))
+              .toList();
+      stockLimitRepository.saveAll(stockLimitEntities);
+      return list;
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private void getDataFromAPIAndSaveToDB() {
+    lock.lock();
+    try {
+      Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
+      LocalDate maxTradeDate = maxTradeDateOpt.get();
+      Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
+      Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
+      List<StockLimitView> list =
+          stockLimitDownSummary.keySet().stream()
+              .filter(stockLimitUpSummary::containsKey)
+              .sorted()
+              .map(
+                  date -> {
+                    StockLimitView stockLimitView = new StockLimitView();
+                    stockLimitView.setTradeDate(date);
+                    stockLimitView.setLimitDownCount(
+                        stockLimitDownSummary.get(date).getLimitDownCount());
+                    stockLimitView.setLimitUpCount(stockLimitUpSummary.get(date).getLimitUpCount());
+                    return stockLimitView;
+                  })
+              .toList();
+      List<StockLimitEntity> stockLimitEntities =
+          list.stream()
+              .filter(
+                  stockLimitView -> {
+                    LocalDate tradeDate = stockLimitView.getTradeDate();
+                    if (tradeDate == null) {
+                      return false;
+                    }
+                    if (tradeDate.isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
+                    return tradeDate.isAfter(maxTradeDate);
+                  })
+              .map(EntityConverter::convertToEntity)
+              .toList();
+      stockLimitRepository.saveAll(stockLimitEntities);
+    } finally {
+      lock.unlock();
+    }
   }
 
   public Map<LocalDate, StockLimitDownSummary> getStockLimitDownSummary() {
     LocalDate startDate = LocalDateUtil.getNow().minusDays(30);
     List<SZSECalendar> tradeCalendarInThirtyDays =
-        tradeCalendarService.getTradeCalendarInThirtyDays(startDate);
+        tradeCalendarService.getSortedTradeCalendarInThirtyDays(startDate);
 
     List<SZSECalendar> filteredTradeCalendarInThirtyDays =
         tradeCalendarInThirtyDays.stream()
@@ -148,7 +177,7 @@ public class MarketStatisticService {
   public Map<LocalDate, StockLimitUpSummary> getStockLimitUpSummary() {
     LocalDate startDate = LocalDateUtil.getNow().minusDays(30);
     List<SZSECalendar> tradeCalendarInThirtyDays =
-        tradeCalendarService.getTradeCalendarInThirtyDays(startDate);
+        tradeCalendarService.getSortedTradeCalendarInThirtyDays(startDate);
 
     List<SZSECalendar> filteredTradeCalendarInThirtyDays =
         tradeCalendarInThirtyDays.stream()

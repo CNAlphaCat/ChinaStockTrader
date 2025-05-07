@@ -59,6 +59,7 @@ public class EntityConverter {
 
   public static IndexPEEntity convertToEntity(IndexPE model) {
     IndexPEEntity entity = new IndexPEEntity();
+    entity.setDate(model.getDate());
     entity.setIndexCode(model.getIndexCode());
     entity.setClose(model.getClose());
     entity.setLyrPe(model.getLyrPe());

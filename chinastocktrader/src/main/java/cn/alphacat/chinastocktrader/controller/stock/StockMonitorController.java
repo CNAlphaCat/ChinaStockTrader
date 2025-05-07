@@ -1,7 +1,7 @@
-package cn.alphacat.chinastocktrader.controller;
+package cn.alphacat.chinastocktrader.controller.stock;
 
 import cn.alphacat.chinastocktrader.model.StockMinBO;
-import cn.alphacat.chinastocktrader.service.StockMonitorService;
+import cn.alphacat.chinastocktrader.service.stock.StockMonitorService;
 import org.springframework.web.bind.annotation.*;
 
 import java.util.List;

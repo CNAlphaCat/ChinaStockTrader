@@ -9,20 +9,17 @@ import cn.alphacat.chinastocktrader.entity.IndexPEEntity;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
-import cn.alphacat.chinastocktrader.service.market.TradeCalendarService;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.Collections;
-import java.util.List;
-import java.util.Map;
-import java.util.Optional;
+import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 
 import cn.alphacat.chinastockdata.enums.LuguLuguIndexPEEnums;
 
@@ -41,6 +38,9 @@ public class CSI300IndexService {
 
   private static final String CSI300_CODE = "000300";
 
+  private final ReentrantLock CSI300Lock = new ReentrantLock();
+  private final ReentrantLock peLock = new ReentrantLock();
+
   public CSI300IndexService(
       final MarketService marketService,
       final MarketIndexRepository marketIndexRepository,
@@ -55,29 +55,10 @@ public class CSI300IndexService {
   }
 
   public List<MarketIndex> getCSI300IndexDaily(LocalDate startDate) {
-    Optional<LocalDate> earliestTradeDateInDB =
-        marketIndexRepository.findEarliestTradeDateByIndexCode(CSI300_CODE);
-    if (earliestTradeDateInDB.isEmpty()) {
-      List<MarketIndex> marketIndexes = getCSI300IndexDailyFromAPI(startDate);
-      List<MarketIndexEntity> entities =
-          marketIndexes.stream()
-              .filter(MarketIndex::checkValid)
-              .map(EntityConverter::convertToEntity)
-              .toList();
-      marketIndexRepository.saveAll(entities);
-      return marketIndexes;
+    if (marketIndexRepository.count() == 0) {
+      return initData(startDate);
     }
-    LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
-    LocalDate latestTradeDateValueInDB =
-        marketIndexRepository
-            .findLatestTradeDateByIndexCode(CSI300_CODE)
-            .orElse(earliestTradeDateValueInDB);
-
-    CompletableFuture.runAsync(
-            () ->
-                getDataFromAPIAndSaveToDB(
-                    startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-            taskExecutor)
+    CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(startDate), taskExecutor)
         .exceptionally(
             ex -> {
               log.error("Failed from API getCSI300IndexDaily: {}", ex.getMessage());
@@ -89,32 +70,66 @@ public class CSI300IndexService {
 
     return allByTradeDateGreaterThanOrEqualTo.stream()
         .map(EntityConverter::convertToModel)
+        .sorted(Comparator.comparing(MarketIndex::getTradeDate))
         .toList();
   }
 
-  private void getDataFromAPIAndSaveToDB(
-      LocalDate startDate,
-      LocalDate earliestTradeDateValueInDB,
-      LocalDate latestTradeDateValueInDB) {
-    List<MarketIndex> marketIndexs = getCSI300IndexDailyFromAPI(startDate);
-    List<MarketIndexEntity> entitiesToSave =
-        marketIndexs.stream()
-            .filter(
-                index -> {
-                  if (!index.checkValid()) {
-                    return false;
-                  }
-                  if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
-                    return false;
-                  }
-                  if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
-                    return true;
-                  }
-                  return index.getTradeDate().isAfter(latestTradeDateValueInDB);
-                })
-            .map(EntityConverter::convertToEntity)
+  private List<MarketIndex> initData(LocalDate startDate) {
+    CSI300Lock.lock();
+    try {
+      if (marketIndexRepository.count() > 0) {
+        return marketIndexRepository
+            .findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE)
+            .stream()
+            .map(EntityConverter::convertToModel)
             .toList();
-    marketIndexRepository.saveAll(entitiesToSave);
+      }
+      List<MarketIndex> marketIndexes = getCSI300IndexDailyFromAPI(startDate);
+      List<MarketIndexEntity> entities =
+          marketIndexes.stream()
+              .filter(MarketIndex::checkValid)
+              .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+              .map(EntityConverter::convertToEntity)
+              .toList();
+      marketIndexRepository.saveAll(entities);
+      return marketIndexes;
+    } finally {
+      CSI300Lock.unlock();
+    }
+  }
+
+  private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    CSI300Lock.lock();
+    try {
+      Optional<LocalDate> earliestTradeDateInDB =
+          marketIndexRepository.findEarliestTradeDateByIndexCode(CSI300_CODE);
+      LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
+      LocalDate latestTradeDateValueInDB =
+          marketIndexRepository
+              .findLatestTradeDateByIndexCode(CSI300_CODE)
+              .orElse(earliestTradeDateValueInDB);
+      List<MarketIndex> marketIndexs = getCSI300IndexDailyFromAPI(startDate);
+      List<MarketIndexEntity> entitiesToSave =
+          marketIndexs.stream()
+              .filter(
+                  index -> {
+                    if (!index.checkValid()) {
+                      return false;
+                    }
+                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
+                    if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
+                      return true;
+                    }
+                    return index.getTradeDate().isAfter(latestTradeDateValueInDB);
+                  })
+              .map(EntityConverter::convertToEntity)
+              .toList();
+      marketIndexRepository.saveAll(entitiesToSave);
+    } finally {
+      CSI300Lock.unlock();
+    }
   }
 
   public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
@@ -134,43 +149,51 @@ public class CSI300IndexService {
   }
 
   private void getCSI300IndexPEFromAPIAndSaveToDB() {
-    Optional<LocalDate> top1DateByIndexCodeOrderByDateDesc =
-        indexPERepository.findTop1DateByIndexCodeOrderByDateDesc(
-            LuguLuguIndexPEEnums.SCI300.getIndeCode());
-    if (top1DateByIndexCodeOrderByDateDesc.isEmpty()) {
+    peLock.lock();
+    try {
+      Optional<LocalDate> top1DateByIndexCodeOrderByDateDesc =
+          indexPERepository.findTop1DateByIndexCodeOrderByDateDesc(
+              LuguLuguIndexPEEnums.SCI300.getIndeCode());
+      if (top1DateByIndexCodeOrderByDateDesc.isEmpty()) {
+        Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
+        List<IndexPEEntity> entities =
+            stockIndexPE.values().stream()
+                .filter(
+                    entity -> {
+                      LocalDate date = entity.getDate();
+                      if (date == null) {
+                        return false;
+                      }
+                      return !date.isEqual(LocalDateUtil.getNow());
+                    })
+                .map(EntityConverter::convertToEntity)
+                .toList();
+
+        indexPERepository.saveAll(entities);
+        return;
+      }
+      LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
+
       Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
       List<IndexPEEntity> entities =
-          stockIndexPE.values().stream()
+          stockIndexPE.entrySet().stream()
               .filter(
-                  entity -> {
-                    LocalDate date = entity.getDate();
-                    if (date == null) {
+                  entry -> {
+                    LocalDate localDate = entry.getKey();
+                    if (localDate == null) {
                       return false;
                     }
-                    return !date.isEqual(LocalDateUtil.getNow());
+                    if (localDate.isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
+                    return localDate.isAfter(latestDateInDB);
                   })
-              .map(EntityConverter::convertToEntity)
+              .map(item -> EntityConverter.convertToEntity(item.getValue()))
               .toList();
-
       indexPERepository.saveAll(entities);
-      return;
+    } finally {
+      peLock.unlock();
     }
-    LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
-
-    Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
-    List<IndexPEEntity> entities =
-        stockIndexPE.entrySet().stream()
-            .filter(
-                entry -> {
-                  LocalDate localDate = entry.getKey();
-                  if (localDate.isEqual(LocalDateUtil.getNow())) {
-                    return false;
-                  }
-                  return localDate.isAfter(latestDateInDB);
-                })
-            .map(item -> EntityConverter.convertToEntity(item.getValue()))
-            .toList();
-    indexPERepository.saveAll(entities);
   }
 
   private List<MarketIndex> getCSI300IndexDailyFromAPI(LocalDate startDate) {

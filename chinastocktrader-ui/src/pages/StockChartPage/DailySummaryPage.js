@@ -20,7 +20,7 @@ const DailySummaryPage = () => {
     const [startDate10Y] = useState(getDefaultStartDate(120));
 
     return (
-        <div>
+        <div  style={{ padding: '20px' }}>
             <EquityPremiumIndexChart startDate={startDate10Y}  showPointsDetail={false} />
             <TenYearTreasuryBondChart startDate={startDate5Y}  showPointsDetail={false} />
             <TotalMarketAmountSummaryChart startDate={startDate1Y}  showPointsDetail={false} />

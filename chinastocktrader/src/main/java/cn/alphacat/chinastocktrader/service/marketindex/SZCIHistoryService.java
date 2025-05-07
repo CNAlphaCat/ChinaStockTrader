@@ -16,6 +16,7 @@ import java.util.List;
 import java.util.Optional;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 @Slf4j
@@ -24,6 +25,8 @@ public class SZCIHistoryService {
   private final MarketIndexRepository marketIndexRepository;
 
   private final Executor taskExecutor;
+
+  private final ReentrantLock lock = new ReentrantLock();
 
   private static final String SZCI_INDEX_CODE = "399001";
 
@@ -37,31 +40,10 @@ public class SZCIHistoryService {
   }
 
   public List<MarketIndex> getSortedShenzhenIndexHistory(LocalDate startDate) {
-    Optional<LocalDate> earliestTradeDateInDB =
-        marketIndexRepository.findEarliestTradeDateByIndexCode(SZCI_INDEX_CODE);
-    if (earliestTradeDateInDB.isEmpty()) {
-      List<MarketIndex> marketIndexes = getMarketIndices(startDate);
-      List<MarketIndexEntity> entities =
-          marketIndexes.stream()
-              .filter(MarketIndex::checkValid)
-              .map(EntityConverter::convertToEntity)
-              .toList();
-      marketIndexRepository.saveAll(entities);
-      return marketIndexes.stream()
-          .sorted(Comparator.comparing(MarketIndex::getTradeDate))
-          .toList();
+    if (marketIndexRepository.count() == 0) {
+      return initData(startDate);
     }
-    LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
-    LocalDate latestTradeDateValueInDB =
-        marketIndexRepository
-            .findLatestTradeDateByIndexCode(SZCI_INDEX_CODE)
-            .orElse(earliestTradeDateValueInDB);
-
-    CompletableFuture.runAsync(
-            () ->
-                getDataFromAPIAndSaveToDB(
-                    startDate, earliestTradeDateValueInDB, latestTradeDateValueInDB),
-            taskExecutor)
+    CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(startDate), taskExecutor)
         .exceptionally(
             ex -> {
               log.error("Failed from API getShanghaiIndexHistory: {}", ex.getMessage());
@@ -76,29 +58,63 @@ public class SZCIHistoryService {
         .toList();
   }
 
-  private void getDataFromAPIAndSaveToDB(
-      LocalDate startDate,
-      LocalDate earliestTradeDateValueInDB,
-      LocalDate latestTradeDateValueInDB) {
-    List<MarketIndex> marketIndexs = getMarketIndices(startDate);
-    List<MarketIndexEntity> entitiesToSave =
-        marketIndexs.stream()
-            .filter(
-                index -> {
-                  if (!index.checkValid()) {
-                    return false;
-                  }
-                  if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
-                    return false;
-                  }
-                  if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
-                    return true;
-                  }
-                  return index.getTradeDate().isAfter(latestTradeDateValueInDB);
-                })
-            .map(EntityConverter::convertToEntity)
+  private List<MarketIndex> initData(LocalDate startDate) {
+    lock.lock();
+    try {
+      if (marketIndexRepository.count() > 0) {
+        return marketIndexRepository
+            .findAllByTradeDateGreaterThanOrEqualTo(startDate, SZCI_INDEX_CODE)
+            .stream()
+            .map(EntityConverter::convertToModel)
             .toList();
-    marketIndexRepository.saveAll(entitiesToSave);
+      }
+      List<MarketIndex> marketIndexes = getMarketIndices(startDate);
+      List<MarketIndexEntity> entities =
+          marketIndexes.stream()
+              .filter(MarketIndex::checkValid)
+              .map(EntityConverter::convertToEntity)
+              .toList();
+      marketIndexRepository.saveAll(entities);
+      return marketIndexes.stream()
+          .sorted(Comparator.comparing(MarketIndex::getTradeDate))
+          .toList();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    lock.lock();
+    try {
+      Optional<LocalDate> earliestTradeDateInDB =
+          marketIndexRepository.findEarliestTradeDateByIndexCode(SZCI_INDEX_CODE);
+      LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
+      LocalDate latestTradeDateValueInDB =
+          marketIndexRepository
+              .findLatestTradeDateByIndexCode(SZCI_INDEX_CODE)
+              .orElse(earliestTradeDateValueInDB);
+      List<MarketIndex> marketIndexs = getMarketIndices(startDate);
+      List<MarketIndexEntity> entitiesToSave =
+          marketIndexs.stream()
+              .filter(
+                  index -> {
+                    if (!index.checkValid()) {
+                      return false;
+                    }
+                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
+                    if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
+                      return true;
+                    }
+                    return index.getTradeDate().isAfter(latestTradeDateValueInDB);
+                  })
+              .map(EntityConverter::convertToEntity)
+              .toList();
+      marketIndexRepository.saveAll(entitiesToSave);
+    } finally {
+      lock.unlock();
+    }
   }
 
   private List<MarketIndex> getMarketIndices(LocalDate startDate) {

@@ -33,6 +33,6 @@ public class OnePercentVolatilityFunds {
     this.displayFunds =
         amount
             .divide(volatility, 2, RoundingMode.HALF_UP)
-            .divide(BigDecimal.valueOf(1_000_000_000), 2, RoundingMode.HALF_UP);
+            .divide(BigDecimal.valueOf(100000000), 2, RoundingMode.HALF_UP);
   }
 }

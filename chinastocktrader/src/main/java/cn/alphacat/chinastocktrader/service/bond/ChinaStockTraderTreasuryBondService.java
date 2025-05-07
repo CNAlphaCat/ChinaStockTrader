@@ -13,6 +13,7 @@ import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
 import java.util.concurrent.Executor;
+import java.util.concurrent.locks.ReentrantLock;
 import java.util.stream.Collectors;
 
 @Service
@@ -22,6 +23,8 @@ public class ChinaStockTraderTreasuryBondService {
   private final TreasuryBondRepository treasuryBondRepository;
 
   private final Executor taskExecutor;
+
+  private final ReentrantLock lock = new ReentrantLock();
 
   public ChinaStockTraderTreasuryBondService(
       final TreasuryBondService treasuryBondService,
@@ -44,28 +47,10 @@ public class ChinaStockTraderTreasuryBondService {
   }
 
   public List<TreasuryBond> getSortedTreasuryBondDataList(LocalDate startDate) {
-    Optional<LocalDate> earliestSolarDateInDB = treasuryBondRepository.findMinSolarDate();
-    if (earliestSolarDateInDB.isEmpty()) {
-      Map<LocalDate, TreasuryBond> tenYearTreasuryBond =
-          treasuryBondService.getTreasuryBondDataMap(startDate);
-      List<TreasuryBondEntity> treasuryBondEntities =
-          tenYearTreasuryBond.values().stream()
-              .map(EntityConverter::convertToEntity)
-              .collect(Collectors.toCollection(() -> new ArrayList<>(tenYearTreasuryBond.size())));
-      treasuryBondRepository.saveAll(treasuryBondEntities);
-      return tenYearTreasuryBond.values().stream()
-          .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
-          .toList();
+    if (treasuryBondRepository.count() == 0) {
+      return initData(startDate);
     }
-    LocalDate earliestSolarDateValueInDB = earliestSolarDateInDB.get();
-    LocalDate latestTradeDateValueInDB =
-        treasuryBondRepository.findMaxSolarDate().orElse(earliestSolarDateValueInDB);
-
-    CompletableFuture.runAsync(
-            () ->
-                getDataFromAPIAndSaveToDB(
-                    startDate, latestTradeDateValueInDB, earliestSolarDateValueInDB),
-            taskExecutor)
+    CompletableFuture.runAsync(() -> getDataFromAPIAndSaveToDB(startDate), taskExecutor)
         .exceptionally(
             ex -> {
               log.error("Failed from API getSortedTreasuryBondDataList: {}", ex.getMessage());
@@ -80,30 +65,76 @@ public class ChinaStockTraderTreasuryBondService {
         .toList();
   }
 
-  private void getDataFromAPIAndSaveToDB(
-      LocalDate startDate,
-      LocalDate latestTradeDateValueInDB,
-      LocalDate earliestSolarDateValueInDB) {
-    Map<LocalDate, TreasuryBond> tenYearTreasuryBond =
-        treasuryBondService.getTreasuryBondDataMap(startDate);
-    List<TreasuryBondEntity> treasuryBondEntities =
-        tenYearTreasuryBond.values().stream()
-            .filter(
-                treasuryBond -> {
-                  LocalDate solarDate = treasuryBond.getSolarDate();
-                  if (solarDate == null) {
-                    return false;
-                  }
-                  if (solarDate.isEqual(LocalDateUtil.getNow())) {
-                    return false;
-                  }
-                  if (solarDate.isAfter(latestTradeDateValueInDB)) {
+  private List<TreasuryBond> initData(LocalDate startDate) {
+    lock.lock();
+    try {
+      if (treasuryBondRepository.count() > 0) {
+        return treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate).stream()
+            .map(EntityConverter::convertToModel)
+            .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
+            .toList();
+      }
+      Map<LocalDate, TreasuryBond> tenYearTreasuryBond =
+          treasuryBondService.getTreasuryBondDataMap(startDate);
+      List<TreasuryBondEntity> treasuryBondEntities =
+          tenYearTreasuryBond.values().stream()
+              .map(EntityConverter::convertToEntity)
+              .filter(
+                  treasuryBond -> {
+                    LocalDate solarDate = treasuryBond.getSolarDate();
+                    if (solarDate == null) {
+                      return false;
+                    }
+                    if (solarDate.isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
                     return true;
-                  }
-                  return solarDate.isBefore(earliestSolarDateValueInDB);
-                })
-            .map(EntityConverter::convertToEntity)
-            .collect(Collectors.toCollection(() -> new ArrayList<>(tenYearTreasuryBond.size())));
-    treasuryBondRepository.saveAll(treasuryBondEntities);
+                  })
+              .collect(Collectors.toCollection(() -> new ArrayList<>(tenYearTreasuryBond.size())));
+      treasuryBondRepository.saveAll(treasuryBondEntities);
+      return tenYearTreasuryBond.values().stream()
+          .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
+          .toList();
+    } finally {
+      lock.unlock();
+    }
+  }
+
+  private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    lock.lock();
+    try {
+      LocalDate finalLatestTradeDateValueInDB =
+          treasuryBondRepository.findMaxSolarDate().orElseThrow();
+      LocalDate finalEarliestSolarDateValueInDB =
+          treasuryBondRepository.findMinSolarDate().orElseThrow();
+
+      if (finalLatestTradeDateValueInDB.isEqual(LocalDateUtil.getNow())) {
+        return;
+      }
+      Map<LocalDate, TreasuryBond> tenYearTreasuryBond =
+          treasuryBondService.getTreasuryBondDataMap(startDate);
+
+      List<TreasuryBondEntity> treasuryBondEntities =
+          tenYearTreasuryBond.values().stream()
+              .filter(
+                  treasuryBond -> {
+                    LocalDate solarDate = treasuryBond.getSolarDate();
+                    if (solarDate == null) {
+                      return false;
+                    }
+                    if (solarDate.isEqual(LocalDateUtil.getNow())) {
+                      return false;
+                    }
+                    if (solarDate.isAfter(finalLatestTradeDateValueInDB)) {
+                      return true;
+                    }
+                    return solarDate.isBefore(finalEarliestSolarDateValueInDB);
+                  })
+              .map(EntityConverter::convertToEntity)
+              .collect(Collectors.toCollection(() -> new ArrayList<>(tenYearTreasuryBond.size())));
+      treasuryBondRepository.saveAll(treasuryBondEntities);
+    } finally {
+      lock.unlock();
+    }
   }
 }

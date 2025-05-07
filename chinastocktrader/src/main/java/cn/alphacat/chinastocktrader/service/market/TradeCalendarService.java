@@ -1,6 +1,5 @@
 package cn.alphacat.chinastocktrader.service.market;
 
-import cn.alphacat.chinastockdata.enums.TradeStatusEnum;
 import cn.alphacat.chinastockdata.market.SZSETradeCalendarService;
 import cn.alphacat.chinastockdata.model.SZSECalendar;
 import cn.alphacat.chinastocktrader.entity.TradeCalendarEntity;
@@ -10,15 +9,16 @@ import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import org.springframework.stereotype.Service;
 
 import java.time.LocalDate;
-import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
-import java.util.Optional;
+import java.util.concurrent.locks.ReentrantLock;
 
 @Service
 public class TradeCalendarService {
   private final SZSETradeCalendarService szseTradeCalendarService;
   private final TradeCalendarRepository tradeCalendarRepository;
+
+  private final ReentrantLock lock = new ReentrantLock();
 
   public TradeCalendarService(
       final SZSETradeCalendarService szseTradeCalendarService,
@@ -27,7 +27,7 @@ public class TradeCalendarService {
     this.tradeCalendarRepository = tradeCalendarRepository;
   }
 
-  public List<SZSECalendar> getTradeCalendarInThirtyDays(LocalDate startDate) {
+  public List<SZSECalendar> getSortedTradeCalendarInThirtyDays(LocalDate startDate) {
     List<TradeCalendarEntity> tradeCalendarEntities =
         tradeCalendarRepository.findByTradeDateIsGreaterThanEqual(startDate);
 
@@ -47,46 +47,53 @@ public class TradeCalendarService {
               })
           .toList();
     }
-    int year = LocalDateUtil.getNow().getYear();
-    List<SZSECalendar> tradeCalendar = szseTradeCalendarService.getTradeCalendar(year);
-
-    List<TradeCalendarEntity> entitiesSaveToDB =
-        tradeCalendar.stream().map(EntityConverter::convertToEntity).toList();
-    tradeCalendarRepository.saveAll(entitiesSaveToDB);
-    return tradeCalendar.stream()
-        .filter(
-            calendar -> {
-              LocalDate tradeDate = calendar.getTradeDate();
-              if (tradeDate.isBefore(startDate)) {
-                return false;
-              }
-              if (tradeDate.isAfter(LocalDateUtil.getNow())) {
-                return false;
-              }
-              return true;
-            })
-        .toList();
+    return initData(startDate);
   }
 
-  public SZSECalendar getTradeCalendar(LocalDate date) {
-    Optional<TradeCalendarEntity> byTradeDate = tradeCalendarRepository.findByTradeDate(date);
-    if (byTradeDate.isPresent()) {
-      TradeCalendarEntity tradeCalendarEntity = byTradeDate.get();
-      return EntityConverter.convertToModel(tradeCalendarEntity);
-    }
-    int year = date.getYear();
-    List<SZSECalendar> tradeCalendar = szseTradeCalendarService.getTradeCalendar(year);
+  private List<SZSECalendar> initData(LocalDate startDate) {
+    lock.lock();
+    try {
+      if (tradeCalendarRepository.count() > 0) {
+        List<TradeCalendarEntity> tradeCalendarEntities =
+            tradeCalendarRepository.findByTradeDateIsGreaterThanEqual(startDate);
+        return tradeCalendarEntities.stream()
+            .map(EntityConverter::convertToModel)
+            .filter(
+                calendar -> {
+                  LocalDate tradeDate = calendar.getTradeDate();
+                  if (tradeDate.isBefore(startDate)) {
+                    return false;
+                  }
+                  if (tradeDate.isAfter(LocalDateUtil.getNow())) {
+                    return false;
+                  }
+                  return true;
+                })
+            .sorted(Comparator.comparing(SZSECalendar::getTradeDate))
+            .toList();
+      }
+      int year = LocalDateUtil.getNow().getYear();
+      List<SZSECalendar> tradeCalendar = szseTradeCalendarService.getTradeCalendar(year);
 
-    List<TradeCalendarEntity> tradeCalendarEntities = new ArrayList<>();
-    for (SZSECalendar calendar : tradeCalendar) {
-      TradeCalendarEntity tradeCalendarEntity = EntityConverter.convertToEntity(calendar);
-      tradeCalendarEntities.add(tradeCalendarEntity);
+      List<TradeCalendarEntity> entitiesSaveToDB =
+          tradeCalendar.stream().map(EntityConverter::convertToEntity).toList();
+      tradeCalendarRepository.saveAll(entitiesSaveToDB);
+      return tradeCalendar.stream()
+          .filter(
+              calendar -> {
+                LocalDate tradeDate = calendar.getTradeDate();
+                if (tradeDate.isBefore(startDate)) {
+                  return false;
+                }
+                if (tradeDate.isAfter(LocalDateUtil.getNow())) {
+                  return false;
+                }
+                return true;
+              })
+          .sorted(Comparator.comparing(SZSECalendar::getTradeDate))
+          .toList();
+    } finally {
+      lock.unlock();
     }
-    tradeCalendarRepository.saveAll(tradeCalendarEntities);
-
-    return tradeCalendar.stream()
-        .filter(calendar -> calendar.getTradeDate().equals(date))
-        .findFirst()
-        .orElse(null);
   }
 }

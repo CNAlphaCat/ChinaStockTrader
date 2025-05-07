@@ -1,4 +1,4 @@
-package cn.alphacat.chinastocktrader.service;
+package cn.alphacat.chinastocktrader.service.stock;
 
 import cn.alphacat.chinastockdata.model.stock.StockMin;
 import cn.alphacat.chinastockdata.stock.StockService;

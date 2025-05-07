@@ -22,7 +22,7 @@ ChartJS.register(
     Legend
 );
 
-const TITLE= '涨跌停情绪对数比率指数'
+const TITLE= '非ST涨跌停情绪对数比率指数'
 
 const StockLimitLogOddsChart = ({ showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
@@ -93,7 +93,7 @@ const StockLimitLogOddsChart = ({ showPointsDetail = true }) => {
                 margin: '10px auto'
             }}>
                 <code>
-                    sentimentScore = log<sub>e</sub>[(涨停家数 + ε) / (跌停家数 + ε)]
+                    sentimentScore = log<sub>e</sub>[(非ST涨停家数 + ε) / (非ST跌停家数 + ε)]
                 </code>
             </div>
             <p style={{ marginTop: '10px', fontStyle: 'italic' }}>

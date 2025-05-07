@@ -22,7 +22,7 @@ ChartJS.register(
     Legend
 );
 
-const TITLE = '沪深京涨跌停家数';
+const TITLE = '沪深京非ST涨跌停家数';
 
 const StockLimitChart = ({ showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
@@ -70,14 +70,14 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
                         labels: labels,
                         datasets: [
                             {
-                                label: '涨停家数',
+                                label: '非ST涨停家数',
                                 data: limitUpCount,
                                 fill: false,
                                 backgroundColor: 'rgba(75,192,192,0.4)',
                                 borderColor: 'rgba(75,192,192,1)',
                             },
                             {
-                                label: '跌停家数',
+                                label: '非ST跌停家数',
                                 data: limitDownCount,
                                 fill: false,
                                 backgroundColor: 'rgba(153,102,255,0.4)',
@@ -122,9 +122,9 @@ const StockLimitChart = ({ showPointsDetail = true }) => {
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
             最新值 -
                 <div style={{ marginLeft: '20px', marginTop: '5px' }}>
-                   涨停：{limitUpValue}（{endDate}）
+                非ST涨停：{limitUpValue}（{endDate}）
                    <br />
-                   跌停：{limitDownValue}（{endDate}）
+                非ST跌停：{limitDownValue}（{endDate}）
                 </div>
             </div>
             <Line
