@@ -75,12 +75,23 @@ docker-compose build --no-cache
 docker-compose up
 ```
 
-### 5.运行
+### 5.运行使用
 
 浏览器输入
 http://localhost:3000
 验证是否能看到网页
 
+#### 5.1 关机后的重复运行
+
+打开DockerDesktop，查看Containers，查看chinastocktrader是否在运行，如果没有则点击运行按钮启动
+
+
 ### 6.保持更新
 
-查看Sourcetree上对应的`ChinaStockTrader`和`ChinaStockData`项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码，重复步骤4即可
+1.查看Sourcetree上对应的`ChinaStockTrader`和`ChinaStockData`项目，是否有拉取提示，有的话点击`拉取`按钮获取最新代码
+
+2.打开DockerDesktop，展开chinastocktrader，删除chinastocktrader_react（网页程序）和chinastocktrader_java（服务器程序）。
+
+**不要删除chinastocktrader_db**（数据库）
+
+3.重复步骤4和5即可
