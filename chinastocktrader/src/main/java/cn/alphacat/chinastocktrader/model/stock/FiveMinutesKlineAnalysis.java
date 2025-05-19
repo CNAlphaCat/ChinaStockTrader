@@ -14,8 +14,10 @@ public class FiveMinutesKlineAnalysis {
   private String stockCode;
   private LocalDateTime startTime;
   private LocalDateTime endTime;
-  private Integer increaseCount;
-  private Integer decreaseCount;
+  private Integer increaseFiveMinuteKlineCount;
+  private Integer decreaseFiveMinuteKlineCount;
+  private Integer increaseThirtyMinuteKlineCount;
+  private Integer decreaseThirtyMinuteKlineCount;
   private PriorityQueue<StockKline> topVolumeKlines;
   private BigDecimal expectedRisingAmountInOneMinute;
   private String displayRisingAmountInOneMinute;

@@ -5,6 +5,7 @@ import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
 import cn.alphacat.chinastocktrader.entity.TreasuryBondEntity;
 import cn.alphacat.chinastocktrader.repository.TreasuryBondRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateTimeUtil;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -122,7 +123,8 @@ public class ChinaStockTraderTreasuryBondService {
                     if (solarDate == null) {
                       return false;
                     }
-                    if (solarDate.isEqual(LocalDateUtil.getNow())) {
+                    if (solarDate.isEqual(LocalDateUtil.getNow())
+                        && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
                       return false;
                     }
                     if (solarDate.isAfter(finalLatestTradeDateValueInDB)) {

@@ -12,7 +12,7 @@ import {
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
 
-import { getEquityPremiumIndex } from '../../services/indexStatisticService';
+import { getEquityPremiumIndex } from '../../services/IndexStatisticService';
 
 ChartJS.register(
     CategoryScale,

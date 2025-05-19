@@ -11,7 +11,7 @@ import {
     Legend,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { getCSI1000DivideCSI300 } from '../../services/indexStatisticService';
+import { getCSI1000DivideCSI300 } from '../../services/IndexStatisticService';
 
 ChartJS.register(
     CategoryScale,

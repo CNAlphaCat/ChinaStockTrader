@@ -33,39 +33,39 @@ public class StockAnalyzeService {
     LocalDate now = LocalDateUtil.getNow();
     LocalDate startDate = now.minusDays(30);
 
-    StockKlineData stockKlineData =
+    StockKlineData stockKlineDataInFiveMinutes =
         stockService.getStockKlineData(stockCode, EAST_MONEY_QT_KLINE_TYPE_FIVE_MINUTES, startDate);
 
-    if (stockKlineData == null) {
+    if (stockKlineDataInFiveMinutes == null) {
       return FiveMinutesKlineAnalysis.builder().build();
     }
 
-    int increaseCount = 0;
-    int decreaseCount = 0;
+    int increaseFiveMinuteKlineCount = 0;
+    int decreaseFiveMinuteCount = 0;
     LocalDateTime startDateTime = startDate.atTime(9, 30);
     LocalDateTime endDateTime = now.atTime(15, 0);
 
-    List<StockKline> kLines = stockKlineData.getKLines();
+    List<StockKline> kLinesInFiveMinuteList = stockKlineDataInFiveMinutes.getKLines();
     PriorityQueue<StockKline> minHeap =
         new PriorityQueue<>(Comparator.comparing(StockKline::getAmount));
 
-    for (StockKline kLine : kLines) {
-      if (kLine.getDateTime().isBefore(startDateTime)) {
-        startDateTime = kLine.getDateTime();
+    for (StockKline kLineInFiveMinute : kLinesInFiveMinuteList) {
+      if (kLineInFiveMinute.getDateTime().isBefore(startDateTime)) {
+        startDateTime = kLineInFiveMinute.getDateTime();
       }
-      if (kLine.getDateTime().isAfter(endDateTime)) {
-        endDateTime = kLine.getDateTime();
+      if (kLineInFiveMinute.getDateTime().isAfter(endDateTime)) {
+        endDateTime = kLineInFiveMinute.getDateTime();
       }
-      if (kLine.getChangePercent().compareTo(BigDecimal.ZERO) > 0) {
-        increaseCount++;
-      } else if (kLine.getChangePercent().compareTo(BigDecimal.ZERO) < 0) {
-        decreaseCount++;
+      if (kLineInFiveMinute.getChangePercent().compareTo(BigDecimal.ZERO) > 0) {
+        increaseFiveMinuteKlineCount++;
+      } else if (kLineInFiveMinute.getChangePercent().compareTo(BigDecimal.ZERO) < 0) {
+        decreaseFiveMinuteCount++;
       }
       if (minHeap.size() < MAX_KLINE_COUNT + 1) {
-        minHeap.offer(kLine);
-      } else if (kLine.getAmount().compareTo(minHeap.peek().getAmount()) > 0) {
+        minHeap.offer(kLineInFiveMinute);
+      } else if (kLineInFiveMinute.getAmount().compareTo(minHeap.peek().getAmount()) > 0) {
         minHeap.poll();
-        minHeap.offer(kLine);
+        minHeap.offer(kLineInFiveMinute);
       }
     }
 
@@ -84,12 +84,27 @@ public class StockAnalyzeService {
               .divide(BigDecimal.valueOf(4), RoundingMode.HALF_UP);
     }
 
+    StockKlineData stockKlineDataInThirtyMinutes =
+        stockService.getStockKlineData(
+            stockCode, EastMoneyQTKlineTypeEnum.THIRTY_MINUTE, startDate);
+    int increaseThirtyMinuteKlineCount = 0;
+    int decreaseThirtyMinuteKlineCount = 0;
+    for (StockKline kLineInThirtyMinute : stockKlineDataInThirtyMinutes.getKLines()) {
+      if (kLineInThirtyMinute.getChangePercent().compareTo(BigDecimal.ZERO) > 0) {
+        increaseThirtyMinuteKlineCount++;
+      } else if (kLineInThirtyMinute.getChangePercent().compareTo(BigDecimal.ZERO) < 0) {
+        decreaseThirtyMinuteKlineCount++;
+      }
+    }
+
     return FiveMinutesKlineAnalysis.builder()
         .stockCode(stockCode)
         .startTime(startDateTime)
         .endTime(endDateTime)
-        .increaseCount(increaseCount)
-        .decreaseCount(decreaseCount)
+        .increaseFiveMinuteKlineCount(increaseFiveMinuteKlineCount)
+        .decreaseFiveMinuteKlineCount(decreaseFiveMinuteCount)
+        .increaseThirtyMinuteKlineCount(increaseThirtyMinuteKlineCount)
+        .decreaseThirtyMinuteKlineCount(decreaseThirtyMinuteKlineCount)
         .topVolumeKlines(minHeap)
         .expectedRisingAmountInOneMinute(expectedRisingAmountInOneMinute)
         .displayRisingAmountInOneMinute(

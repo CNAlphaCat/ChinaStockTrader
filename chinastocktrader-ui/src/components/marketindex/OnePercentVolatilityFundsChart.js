@@ -10,7 +10,7 @@ import {
   Tooltip,
   Legend,
 } from 'chart.js';
-import { getOnePercentVolatilityFunds } from '../../services/indexHistoryService';
+import { getOnePercentVolatilityFunds } from '../../services/IndexHistoryService';
 
 ChartJS.register(
   CategoryScale,

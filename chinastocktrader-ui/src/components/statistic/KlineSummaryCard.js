@@ -8,8 +8,10 @@ const KlineSummaryCard = ({ analysisData }) => {
             <p>股票代码：{analysisData.stockCode}</p>
             <p>起始时间周期：{analysisData.startTime}</p>
             <p>结束时间周期：{analysisData.endTime}</p>
-            <p>5分钟K线上涨总数：{analysisData.increaseCount}</p>
-            <p>5分钟K线下跌总数：{analysisData.decreaseCount}</p>
+            <p>5分钟K线上涨总数：{analysisData.increaseFiveMinuteKlineCount}</p>
+            <p>5分钟K线下跌总数：{analysisData.decreaseFiveMinuteKlineCount}</p>
+            <p>30分钟K线上涨总数：{analysisData.increaseThirtyMinuteKlineCount}</p>
+            <p>30分钟K线下跌总数：{analysisData.decreaseThirtyMinuteKlineCount}</p>
             <p>预计切入量：{analysisData.displayRisingAmountInOneMinute}</p>
         </div>
     );

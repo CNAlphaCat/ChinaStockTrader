@@ -1,6 +1,6 @@
 import React, { useState, useEffect, useMemo } from 'react';
 import { useLocation } from 'react-router-dom';
-import { monitorStock } from '../../services/stockMonitorService';
+import { monitorStock } from '../../services/StockMonitorService';
 
 const StockMonitorPage = () => {
     const [stocks, setStocks] = useState([]);

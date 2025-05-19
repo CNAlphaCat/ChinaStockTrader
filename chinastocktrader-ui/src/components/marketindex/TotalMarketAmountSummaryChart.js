@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { getShanghaiIndexHistory, getShenzhenIndexHistory } from '../../services/indexHistoryService';
+import { getShanghaiIndexHistory, getShenzhenIndexHistory } from '../../services/IndexHistoryService';
 
 ChartJS.register(
     CategoryScale,

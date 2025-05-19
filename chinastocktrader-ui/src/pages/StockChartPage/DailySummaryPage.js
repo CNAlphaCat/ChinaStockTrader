@@ -18,6 +18,7 @@ const DailySummaryPage = () => {
     const [startDate1Y] = useState(getDefaultStartDate(12));
     const [startDate5Y] = useState(getDefaultStartDate(60));
     const [startDate10Y] = useState(getDefaultStartDate(120));
+    const [startDate6M] = useState(getDefaultStartDate(6));
 
     return (
         <div  style={{ padding: '20px' }}>
@@ -28,7 +29,7 @@ const DailySummaryPage = () => {
             <StockLimitLogOddsChart showPointsDetail={false} />
             <StockLimitChart showPointsDetail={false} />
             <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
-            <OnePercentVolatilityFundsChart startDate={startDate1Y}  showPointsDetail={false} />  
+            <OnePercentVolatilityFundsChart startDate={startDate6M}  showPointsDetail={false} />  
         </div>
     );
 };

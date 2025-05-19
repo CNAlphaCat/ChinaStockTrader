@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { getTreasuryBondData } from '../../services/treasuryBondService';
+import { getTreasuryBondData } from '../../services/TreasuryBondService';
 
 ChartJS.register(
     CategoryScale,
@@ -73,15 +73,15 @@ const TenYearUSTreasuryBondChart = ({ startDate, showPointsDetail = true }) => {
                                 label: '中国十年期国债收益率',
                                 data: chinaTenYearTreasuryBondYield,
                                 fill: false,
-                                backgroundColor: 'rgba(153,102,255,0.4)',
-                                borderColor: 'rgba(153,102,255,1)',
+                                backgroundColor: 'rgba(75,192,192,0.4)',
+                                borderColor: 'rgba(75,192,192,1)',
                                 spanGaps: true
                             }, {
                                 label: '美国十年期国债收益率',
                                 data: usTenYearTreasuryBondYield,
                                 fill: false,
-                                backgroundColor: 'rgba(75,192,192,0.4)',
-                                borderColor: 'rgba(75,192,192,1)',
+                                backgroundColor: 'rgba(153,102,255,0.4)',
+                                borderColor: 'rgba(153,102,255,1)',
                                 spanGaps: true,
                             }
                         ],

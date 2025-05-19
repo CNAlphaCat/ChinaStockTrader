@@ -6,6 +6,7 @@ import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateTimeUtil;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -101,7 +102,8 @@ public class SZCIHistoryService {
                     if (!index.checkValid()) {
                       return false;
                     }
-                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
+                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())
+                        && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
                       return false;
                     }
                     if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
@@ -127,7 +129,11 @@ public class SZCIHistoryService {
               if (tradeDate == null) {
                 return false;
               }
-              return !tradeDate.isEqual(LocalDateUtil.getNow());
+              if (tradeDate.isEqual(LocalDateUtil.getNow())
+                  && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
+                return false;
+              }
+              return true;
             })
         .toList();
   }

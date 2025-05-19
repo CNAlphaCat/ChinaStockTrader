@@ -10,6 +10,7 @@ import cn.alphacat.chinastocktrader.entity.MarketIndexEntity;
 import cn.alphacat.chinastocktrader.repository.IndexPERepository;
 import cn.alphacat.chinastocktrader.repository.MarketIndexRepository;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateTimeUtil;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
@@ -116,7 +117,8 @@ public class CSI300IndexService {
                     if (!index.checkValid()) {
                       return false;
                     }
-                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())) {
+                    if (index.getTradeDate().isEqual(LocalDateUtil.getNow())
+                        && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
                       return false;
                     }
                     if (index.getTradeDate().isBefore(earliestTradeDateValueInDB)) {
@@ -164,7 +166,11 @@ public class CSI300IndexService {
                       if (date == null) {
                         return false;
                       }
-                      return !date.isEqual(LocalDateUtil.getNow());
+                      if (date.isEqual(LocalDateUtil.getNow())
+                          && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
+                        return false;
+                      }
+                      return true;
                     })
                 .map(EntityConverter::convertToEntity)
                 .toList();
@@ -183,7 +189,8 @@ public class CSI300IndexService {
                     if (localDate == null) {
                       return false;
                     }
-                    if (localDate.isEqual(LocalDateUtil.getNow())) {
+                    if (localDate.isEqual(LocalDateUtil.getNow())
+                        && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
                       return false;
                     }
                     return localDate.isAfter(latestDateInDB);
@@ -206,7 +213,11 @@ public class CSI300IndexService {
               if (tradeDate == null) {
                 return false;
               }
-              return !tradeDate.isEqual(LocalDateUtil.getNow());
+              if (tradeDate.isEqual(LocalDateUtil.getNow())
+                  && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
+                return false;
+              }
+              return true;
             })
         .toList();
   }

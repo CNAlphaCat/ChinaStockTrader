@@ -9,6 +9,7 @@ import cn.alphacat.chinastocktrader.entity.StockLimitEntity;
 import cn.alphacat.chinastocktrader.repository.StockLimitRepository;
 import cn.alphacat.chinastocktrader.util.AlgorithmUtil;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
+import cn.alphacat.chinastocktrader.util.LocalDateTimeUtil;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import cn.alphacat.chinastocktrader.view.StockLimitView;
 import lombok.extern.slf4j.Slf4j;
@@ -134,7 +135,8 @@ public class MarketStatisticService {
                     if (tradeDate == null) {
                       return false;
                     }
-                    if (tradeDate.isEqual(LocalDateUtil.getNow())) {
+                    if (tradeDate.isEqual(LocalDateUtil.getNow())
+                        && LocalDateTimeUtil.isBeforeEqualStockCloseTime()) {
                       return false;
                     }
                     return tradeDate.isAfter(maxTradeDate);

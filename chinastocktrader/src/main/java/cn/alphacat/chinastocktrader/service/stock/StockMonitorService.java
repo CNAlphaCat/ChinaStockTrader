@@ -7,7 +7,9 @@ import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
+import java.math.RoundingMode;
 import java.util.ArrayList;
+import java.util.Comparator;
 import java.util.List;
 
 @Service
@@ -40,32 +42,35 @@ public class StockMonitorService {
     StockMin last = stockMinList.getLast();
     BigDecimal changePercentInThreeMinutes = getChangePercentInNMinutes(stockMinList, 3);
 
-    StockMinBO stockMinBO =
-        StockMinBO.builder()
-            .stockCode(last.getStockCode())
-            .tradeTime(last.getTradeTime())
-            .openPrice(last.getOpenPrice())
-            .highPrice(last.getHighPrice())
-            .lowPrice(last.getLowPrice())
-            .closePrice(last.getClosePrice())
-            .change(last.getChange())
-            .changePercent(last.getChangePercent())
-            .volume(last.getVolume())
-            .averagePrice(last.getAveragePrice())
-            .amount(last.getAmount())
-            .build();
-    stockMinBO.setChangePercentInThreeMinutes(changePercentInThreeMinutes);
-    return stockMinBO;
+    return StockMinBO.builder()
+        .stockCode(last.getStockCode())
+        .tradeTime(last.getTradeTime())
+        .openPrice(last.getOpenPrice())
+        .highPrice(last.getHighPrice())
+        .lowPrice(last.getLowPrice())
+        .closePrice(last.getClosePrice())
+        .change(last.getChange())
+        .changePercent(last.getChangePercent())
+        .volume(last.getVolume())
+        .averagePrice(last.getAveragePrice())
+        .amount(last.getAmount())
+        .changePercentInThreeMinutes(changePercentInThreeMinutes)
+        .build();
   }
 
   private BigDecimal getChangePercentInNMinutes(ArrayList<StockMin> stockMinList, int n) {
+    stockMinList.sort(Comparator.comparing(StockMin::getTradeTime));
     StockMin last = stockMinList.getLast();
-    BigDecimal preChangePercent = BigDecimal.ZERO;
+    BigDecimal preOpen = last.getOpenPrice();
+
     int secondLastIndex = stockMinList.size() - 2;
     for (int i = secondLastIndex; i >= 0 && i >= stockMinList.size() - n; i--) {
       StockMin current = stockMinList.get(i);
-      preChangePercent = current.getChangePercent();
+      preOpen = current.getOpenPrice();
     }
-    return last.getChangePercent().subtract(preChangePercent);
+    return last.getClosePrice()
+        .subtract(preOpen)
+        .divide(preOpen, 8, RoundingMode.HALF_UP)
+        .multiply(BigDecimal.valueOf(100));
   }
 }

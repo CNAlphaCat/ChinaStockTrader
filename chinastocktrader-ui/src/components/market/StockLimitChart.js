@@ -10,7 +10,7 @@ import {
     Tooltip,
     Legend,
 } from 'chart.js';
-import { getStockLimitSummary } from '../../services/marketStatisticService';
+import { getStockLimitSummary } from '../../services/MarketStatisticService';
 
 ChartJS.register(
     CategoryScale,

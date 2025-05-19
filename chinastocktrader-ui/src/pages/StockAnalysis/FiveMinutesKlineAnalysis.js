@@ -1,6 +1,6 @@
 import React, { useState } from 'react';
 import KlineSummaryCard from '../../components/statistic/KlineSummaryCard';
-import { getFiveMinutesKlineAnalysis } from '../../services/stockAnalysisService';
+import { getFiveMinutesKlineAnalysis } from '../../services/StockAnalysisService';
 
 const FiveMinutesKlineAnalysis = () => {
   const [inputCodes, setInputCodes] = useState('');
