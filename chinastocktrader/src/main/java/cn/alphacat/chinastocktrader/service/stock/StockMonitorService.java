@@ -8,6 +8,7 @@ import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
 import java.math.RoundingMode;
+import java.time.LocalTime;
 import java.util.ArrayList;
 import java.util.Comparator;
 import java.util.List;
@@ -62,11 +63,18 @@ public class StockMonitorService {
     stockMinList.sort(Comparator.comparing(StockMin::getTradeTime));
     StockMin last = stockMinList.getLast();
     BigDecimal preOpen = last.getOpenPrice();
+    if (preOpen == null) {
+      return BigDecimal.ZERO;
+    }
 
     int secondLastIndex = stockMinList.size() - 2;
     for (int i = secondLastIndex; i >= 0 && i >= stockMinList.size() - n; i--) {
       StockMin current = stockMinList.get(i);
-      preOpen = current.getOpenPrice();
+      LocalTime tradeTime = current.getTradeTime().toLocalTime();
+      if (tradeTime.isBefore(LocalTime.of(9, 30))) {
+        continue;
+      }
+      preOpen = current.getOpenPrice() == null ? preOpen : current.getOpenPrice();
     }
     return last.getClosePrice()
         .subtract(preOpen)
