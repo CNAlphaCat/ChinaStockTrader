@@ -12,6 +12,7 @@ COPY . /app
 RUN mvn clean package -DskipTests
 
 FROM eclipse-temurin:21-jre
+COPY --from=build /app/chinastockdata/src/main/resources/ /app/resources/
 COPY --from=build /app/chinastocktrader/target/chinastocktrader-*.jar /app/app.jar
 EXPOSE 8147
 CMD ["java", "-jar", "/app/app.jar"]

@@ -35,8 +35,6 @@ public class CSI300IndexService {
   private final MarketIndexRepository marketIndexRepository;
   private final IndexPERepository indexPERepository;
 
-  private final Map<String, Boolean> requestCache = new ConcurrentHashMap<>();
-
   private static final String CSI300_CODE = "000300";
 
   private final ReentrantLock CSI300Lock = new ReentrantLock();
@@ -223,24 +221,11 @@ public class CSI300IndexService {
   }
 
   private Map<LocalDate, IndexPE> getStockIndexPE() {
-    String todayKey = LocalDateUtil.getNow().toString();
-    if (Boolean.TRUE.equals(requestCache.get(todayKey))) {
+    try {
+      return leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+    } catch (Exception e) {
+      log.error("Failed to getStockIndexPE: {}", e.getMessage());
       return Collections.emptyMap();
-    }
-    synchronized (this) {
-      if (Boolean.TRUE.equals(requestCache.get(todayKey))) {
-        return Collections.emptyMap();
-      }
-      try {
-        Map<LocalDate, IndexPE> result =
-            leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
-        requestCache.put(todayKey, true);
-        return result;
-      } catch (Exception e) {
-        requestCache.remove(todayKey);
-        log.error("Failed to getStockIndexPE: {}", e.getMessage());
-        return Collections.emptyMap();
-      }
     }
   }
 }
