@@ -107,9 +107,13 @@ public class MarketStatisticService {
   }
 
   private void getDataFromAPIAndSaveToDB() {
+    Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
+    if (maxTradeDateOpt.isEmpty()) {
+      initData();
+      return;
+    }
     lock.lock();
     try {
-      Optional<LocalDate> maxTradeDateOpt = stockLimitRepository.findMaxTradeDate();
       LocalDate maxTradeDate = maxTradeDateOpt.get();
       Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
       Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();

@@ -102,12 +102,16 @@ public class ChinaStockTraderTreasuryBondService {
   }
 
   private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    Optional<LocalDate> maxSolarDateOpt = treasuryBondRepository.findMaxSolarDate();
+    Optional<LocalDate> minSolarDateOpt = treasuryBondRepository.findMinSolarDate();
+    if (minSolarDateOpt.isEmpty() || maxSolarDateOpt.isEmpty()) {
+      initData(startDate);
+      return;
+    }
     lock.lock();
     try {
-      LocalDate finalLatestTradeDateValueInDB =
-          treasuryBondRepository.findMaxSolarDate().orElseThrow();
-      LocalDate finalEarliestSolarDateValueInDB =
-          treasuryBondRepository.findMinSolarDate().orElseThrow();
+      LocalDate finalLatestTradeDateValueInDB = maxSolarDateOpt.get();
+      LocalDate finalEarliestSolarDateValueInDB = minSolarDateOpt.get();
 
       if (finalLatestTradeDateValueInDB.isEqual(LocalDateUtil.getNow())) {
         return;

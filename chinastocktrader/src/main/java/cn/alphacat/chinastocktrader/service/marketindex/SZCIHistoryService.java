@@ -85,11 +85,15 @@ public class SZCIHistoryService {
   }
 
   private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    Optional<LocalDate> earliestTradeDateInDB =
+        marketIndexRepository.findEarliestTradeDateByIndexCode(SZCI_INDEX_CODE);
+    if (earliestTradeDateInDB.isEmpty()) {
+      initData(startDate);
+      return;
+    }
+    LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
     lock.lock();
     try {
-      Optional<LocalDate> earliestTradeDateInDB =
-          marketIndexRepository.findEarliestTradeDateByIndexCode(SZCI_INDEX_CODE);
-      LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
       LocalDate latestTradeDateValueInDB =
           marketIndexRepository
               .findLatestTradeDateByIndexCode(SZCI_INDEX_CODE)

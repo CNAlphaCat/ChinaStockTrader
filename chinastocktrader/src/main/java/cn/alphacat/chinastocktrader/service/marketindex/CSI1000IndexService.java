@@ -84,11 +84,15 @@ public class CSI1000IndexService {
   }
 
   private void getDataFromAPIAndSaveToDB(LocalDate startDate) {
+    Optional<LocalDate> earliestTradeDateInDB =
+        marketIndexRepository.findEarliestTradeDateByIndexCode(CSI1000_CODE);
+    if (earliestTradeDateInDB.isEmpty()) {
+      initData(startDate);
+      return;
+    }
+    LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
     lock.lock();
     try {
-      Optional<LocalDate> earliestTradeDateInDB =
-          marketIndexRepository.findEarliestTradeDateByIndexCode(CSI1000_CODE);
-      LocalDate earliestTradeDateValueInDB = earliestTradeDateInDB.get();
       LocalDate latestTradeDateValueInDB =
           marketIndexRepository
               .findLatestTradeDateByIndexCode(CSI1000_CODE)
