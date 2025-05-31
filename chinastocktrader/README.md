@@ -59,7 +59,7 @@ Docker Desktop->Settings->Docker Engine
 
 ```Bash
 docker-compose build --no-cache
-docker-compose up
+docker-compose up  --force-recreate
 ```
 
 #### 4.2 mac
@@ -72,7 +72,7 @@ docker-compose up
 cd /Users/ChinaStockTrader
 
 docker-compose build --no-cache
-docker-compose up
+docker-compose up --force-recreate
 ```
 
 ### 5.运行使用
