@@ -72,10 +72,10 @@ public class SSEIndexHistoryService {
   private List<MarketIndex> initData(LocalDate startDate) {
     lock.lock();
     try {
-      if (marketIndexRepository.count() > 0) {
-        return marketIndexRepository
-            .findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE)
-            .stream()
+      List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualToList =
+          marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, SSE_INDEX_CODE);
+      if (!allByTradeDateGreaterThanOrEqualToList.isEmpty()) {
+        return allByTradeDateGreaterThanOrEqualToList.stream()
             .map(EntityConverter::convertToModel)
             .toList();
       }

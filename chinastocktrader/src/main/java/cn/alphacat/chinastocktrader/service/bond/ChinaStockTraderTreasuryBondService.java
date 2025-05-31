@@ -69,8 +69,10 @@ public class ChinaStockTraderTreasuryBondService {
   private List<TreasuryBond> initData(LocalDate startDate) {
     lock.lock();
     try {
-      if (treasuryBondRepository.count() > 0) {
-        return treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate).stream()
+      List<TreasuryBondEntity> bySolarDateIsGreaterThanEqual =
+          treasuryBondRepository.findBySolarDateIsGreaterThanEqual(startDate);
+      if (!bySolarDateIsGreaterThanEqual.isEmpty()) {
+        return bySolarDateIsGreaterThanEqual.stream()
             .map(EntityConverter::convertToModel)
             .sorted(Comparator.comparing(TreasuryBond::getSolarDate))
             .toList();

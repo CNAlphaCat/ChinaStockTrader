@@ -76,10 +76,10 @@ public class CSI300IndexService {
   private List<MarketIndex> initData(LocalDate startDate) {
     CSI300Lock.lock();
     try {
-      if (marketIndexRepository.count() > 0) {
-        return marketIndexRepository
-            .findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE)
-            .stream()
+      List<MarketIndexEntity> allByTradeDateGreaterThanOrEqualToList =
+          marketIndexRepository.findAllByTradeDateGreaterThanOrEqualTo(startDate, CSI300_CODE);
+      if (!allByTradeDateGreaterThanOrEqualToList.isEmpty()) {
+        return allByTradeDateGreaterThanOrEqualToList.stream()
             .map(EntityConverter::convertToModel)
             .toList();
       }
