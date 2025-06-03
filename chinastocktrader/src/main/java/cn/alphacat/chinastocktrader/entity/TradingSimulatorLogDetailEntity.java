@@ -17,6 +17,7 @@ public class TradingSimulatorLogDetailEntity {
   @Enumerated(EnumType.STRING)
   private TradeActionEnums action;
 
+  @Enumerated(EnumType.STRING)
   private AssetTypeEnums assetType;
   private String code;
   private String name;
@@ -24,6 +25,6 @@ public class TradingSimulatorLogDetailEntity {
   private BigDecimal amount;
 
   @ManyToOne
-  @JoinColumn(name = "log_id")
-  private TradingSimulatorLogEntity log;
+  @JoinColumn(name = "executeLog_id")
+  private TradingSimulatorExecuteLogEntity executeLog;
 }

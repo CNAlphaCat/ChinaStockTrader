@@ -11,6 +11,7 @@ public class TradingSimulatorConfigurationDetailEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
+  @Enumerated(EnumType.STRING)
   private TradingSimulatorConfigurationKeyEnums item;
   private String value;
 

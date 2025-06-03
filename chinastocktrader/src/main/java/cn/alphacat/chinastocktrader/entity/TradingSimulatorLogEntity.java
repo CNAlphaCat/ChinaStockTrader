@@ -1,7 +1,5 @@
 package cn.alphacat.chinastocktrader.entity;
 
-import cn.alphacat.chinastocktrader.enums.ExecutionStatusEnums;
-import cn.alphacat.chinastocktrader.enums.TradeActionEnums;
 import jakarta.persistence.*;
 import lombok.Data;
 
@@ -22,14 +20,8 @@ public class TradingSimulatorLogEntity {
   private BigDecimal currentBalance;
   private LocalDate startDate;
 
-  @Enumerated(EnumType.STRING)
-  private ExecutionStatusEnums status;
-
   @OneToMany(mappedBy = "log", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TradingSimulatorHoldingDetailEntity> holdingDetails;
-
-  @OneToMany(mappedBy = "log", cascade = CascadeType.ALL, orphanRemoval = true)
-  private List<TradingSimulatorLogDetailEntity> logDetails;
 
   @OneToMany(mappedBy = "log", cascade = CascadeType.ALL, orphanRemoval = true)
   private List<TradingSimulatorConfigurationDetailEntity> configurationDetails;

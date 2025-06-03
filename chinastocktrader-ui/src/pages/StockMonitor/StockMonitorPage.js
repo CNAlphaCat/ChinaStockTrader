@@ -4,12 +4,19 @@ import { monitorStock } from '../../services/StockMonitorService';
 
 const StockMonitorPage = () => {
     const [stocks, setStocks] = useState([]);
+    const [currentTime, setCurrentTime] = useState(new Date());
 
     const location = useLocation();
     const stockCodeList = useMemo(() => location.state?.stockCodeList || [], [location.state]);
     const queryInterval = location.state?.queryInterval || 5;
     const notifications = location.state?.notifications || { title: false, alert: false, sound: false };
-    console.log('notifications', notifications);
+
+    useEffect(() => {
+        const timer = setInterval(() => {
+            setCurrentTime(new Date());
+        }, 1000);
+        return () => clearInterval(timer);
+    }, []);
 
     useEffect(() => {
         let isFetching = false;
@@ -32,7 +39,7 @@ const StockMonitorPage = () => {
         };
 
         const intervalId = setInterval(fetchStockData, getRandomInterval());
-    
+
         return () => {
             clearInterval(intervalId);
         };
@@ -42,7 +49,7 @@ const StockMonitorPage = () => {
         if (!notifications.title) return;
 
         const originalTitle = document.title;
-    
+
         const updateTitle = () => {
             const alertStock = stocks.find(stock => parseFloat(stock.changePercentInThreeMinutes) >= 1);
             if (alertStock) {
@@ -51,9 +58,9 @@ const StockMonitorPage = () => {
                 document.title = originalTitle;
             }
         };
-    
+
         updateTitle();
-    
+
         return () => {
             document.title = originalTitle;
         };
@@ -65,7 +72,7 @@ const StockMonitorPage = () => {
             const audio = new Audio('/notification.mp3');
             audio.play();
         };
-    
+
         const checkForAlerts = () => {
             stocks.forEach(stock => {
                 if (parseFloat(stock.changePercentInThreeMinutes) >= 1) {
@@ -73,7 +80,7 @@ const StockMonitorPage = () => {
                 }
             });
         };
-    
+
         checkForAlerts();
     }, [stocks, notifications.sound]);
 
@@ -90,17 +97,20 @@ const StockMonitorPage = () => {
                 });
             }
         };
-    
+
         if (Notification.permission === 'default') {
             Notification.requestPermission();
         }
-    
+
         sendNotification();
     }, [stocks, notifications.alert]);
 
     return (
         <div style={{ padding: '20px' }}>
             <h2>股票监控</h2>
+            <div style={{ marginBottom: '10px', fontWeight: 'bold' }}>
+                当前时间：{currentTime.toLocaleString()}
+            </div>
             <table style={{ width: '100%', borderCollapse: 'collapse', textAlign: 'center' }}>
                 <thead>
                     <tr style={{ backgroundColor: '#f2f2f2' }}>
