@@ -8,4 +8,5 @@ import lombok.Data;
 public class IMVolatilityBO {
   private LocalDate date;
   private BigDecimal highLowRange;
+  private BigDecimal percentile;
 }

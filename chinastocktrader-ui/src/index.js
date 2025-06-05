@@ -11,6 +11,7 @@ import StockMonitorConfigPage from './pages/StockMonitor/StockMonitorConfigPage'
 import CSI1000DivideCSI300Page from './pages/StockChartPage/CSI1000DivideCSI300Page';
 import DailySummaryPage from './pages/StockChartPage/DailySummaryPage';
 import FiveMinutesKlineAnalysis from './pages/StockAnalysis/FiveMinutesKlineAnalysis';
+import IMVolatilityReportPage from './pages/report/IMVolatilityReportPage';
 
 const root = ReactDOM.createRoot(document.getElementById('root'));
 root.render(
@@ -24,6 +25,7 @@ root.render(
         <Route path="/csi1000-divide-csi300" element={<CSI1000DivideCSI300Page />} />
         <Route path="/daily-summary" element={<DailySummaryPage />} />
         <Route path="/five-minutes-kline-analysis" element={<FiveMinutesKlineAnalysis />} />
+        <Route path="/im-volatility-report" element={<IMVolatilityReportPage />} />
       </Routes>
     </Router>
   </React.StrictMode>
