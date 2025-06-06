@@ -4,8 +4,11 @@ import cn.alphacat.chinastockdata.model.SZSECalendar;
 import cn.alphacat.chinastockdata.model.marketindex.IndexPE;
 import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastockdata.model.bond.TreasuryBond;
+import cn.alphacat.chinastockdata.model.stock.StockInfo;
 import cn.alphacat.chinastocktrader.entity.*;
 
+import cn.alphacat.chinastocktrader.entity.stock.StockInfoEntity;
+import cn.alphacat.chinastockdata.enums.StockExchangeMarketEnums;
 import cn.alphacat.chinastocktrader.view.StockLimitView;
 import org.springframework.stereotype.Component;
 
@@ -135,6 +138,22 @@ public class EntityConverter {
     model.setTradeDate(entity.getTradeDate());
     model.setLimitUpCount(entity.getLimitUpCount());
     model.setLimitDownCount(entity.getLimitDownCount());
+    return model;
+  }
+
+  public static StockInfoEntity convertToEntity(StockInfo stockInfo) {
+    StockInfoEntity entity = new StockInfoEntity();
+    entity.setStockCode(stockInfo.getStockCode());
+    entity.setStockName(stockInfo.getStockName());
+    entity.setExchangeMarket(stockInfo.getExchangeMarket());
+    return entity;
+  }
+
+  public static StockInfo convertToModel(StockInfoEntity entity) {
+    StockInfo model = new StockInfo();
+    model.setStockCode(entity.getStockCode());
+    model.setStockName(entity.getStockName());
+    model.setExchangeMarket(entity.getExchangeMarket());
     return model;
   }
 }

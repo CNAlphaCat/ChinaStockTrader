@@ -12,7 +12,7 @@ import java.util.List;
 public class StockInfoController {
   private final StockInfoService stockInfoService;
 
-  public StockInfoController(StockInfoService stockInfoService) {
+  public StockInfoController(final StockInfoService stockInfoService) {
     this.stockInfoService = stockInfoService;
   }
 
