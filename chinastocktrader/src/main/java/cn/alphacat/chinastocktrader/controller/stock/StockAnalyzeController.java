@@ -7,7 +7,7 @@ import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;
 
 @RestController
-@RequestMapping("/api/stock")
+@RequestMapping("/api/stock/analyze")
 public class StockAnalyzeController {
   private final StockAnalyzeService stockAnalyzeService;
 
@@ -15,7 +15,7 @@ public class StockAnalyzeController {
     this.stockAnalyzeService = stockAnalyzeService;
   }
 
-  @RequestMapping("/analyze/kline/5minutes/{stockCode}")
+  @RequestMapping("/kline/5minutes/{stockCode}")
   public FiveMinutesKlineAnalysis analyzeStock(@PathVariable String stockCode) {
     return stockAnalyzeService.analyzeStock(stockCode);
   }
