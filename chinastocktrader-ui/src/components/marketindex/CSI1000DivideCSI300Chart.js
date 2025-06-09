@@ -24,7 +24,7 @@ ChartJS.register(
 );
 ChartJS.register(annotationPlugin);
 
-const TITLE = '中证1000/中证300 指数比值';
+const TITLE = '中证1000/沪深300 指数比值';
 
 const CSI1000DivideCSI300Chart = ({ startDate, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({

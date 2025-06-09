@@ -11,7 +11,7 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
-public class StockOpenPriceAndRiseReportService {
+public class StockOpenPriceAndRiseReportService implements CommonReportService {
   private final StockKlineCacheRepository stockKlineCacheRepository;
 
   private static final String REPORT_TITLE = "股票开盘价与最终涨幅7%回测报告";
@@ -20,7 +20,8 @@ public class StockOpenPriceAndRiseReportService {
     this.stockKlineCacheRepository = stockKlineCacheRepository;
   }
 
-  public CommonReport generateStockOpenPriceAndRiseReport() {
+  @Override
+  public CommonReport executeReport() {
     List<StockKlineCacheEntity> all = stockKlineCacheRepository.findAll();
 
     int changePercentGreaterThanSevenPercentCount = 0;

@@ -25,10 +25,15 @@ public class StockMonitorService {
   public List<StockMinBO> monitorStockList(List<String> stockCodeList) {
     List<StockMinBO> stockMinBOList = new ArrayList<>();
     for (String stockCode : stockCodeList) {
-      ArrayList<StockMin> stockMinList = stockService.getStockMin(stockCode);
-
-      if (stockMinList == null) {
-        return new ArrayList<>();
+      ArrayList<StockMin> stockMinList;
+      try{
+        stockMinList = stockService.getStockMin(stockCode);
+      }catch (Exception e){
+        log.error("error for stockCode {}, exception : {}", stockCode, e.getMessage());
+        stockMinList = new ArrayList<>();
+        StockMin stockMin = new StockMin();
+        stockMin.setStockCode(stockCode);
+        stockMinList.add(stockMin);
       }
       StockMinBO stockMinBO = buildStockMinBO(stockMinList);
       stockMinBOList.add(stockMinBO);
