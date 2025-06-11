@@ -10,4 +10,6 @@ import java.util.Optional;
 public interface StockLimitRepository extends JpaRepository<StockLimitEntity, Long> {
   @Query("SELECT MAX(m.tradeDate) FROM StockLimitEntity m")
   Optional<LocalDate> findMaxTradeDate();
+
+  Optional<StockLimitEntity> findByTradeDate(LocalDate tradeDate);
 }

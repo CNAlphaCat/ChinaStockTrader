@@ -114,6 +114,11 @@ public class MarketStatisticService {
     }
     lock.lock();
     try {
+      Optional<StockLimitEntity> byTradeDate =
+          stockLimitRepository.findByTradeDate(LocalDate.now());
+      if (byTradeDate.isPresent()) {
+        return;
+      }
       LocalDate maxTradeDate = maxTradeDateOpt.get();
       Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
       Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
