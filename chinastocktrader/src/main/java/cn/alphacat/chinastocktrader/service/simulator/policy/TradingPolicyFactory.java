@@ -5,8 +5,8 @@ import cn.alphacat.chinastocktrader.entity.TradingSimulatorLogEntity;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorConfigurationDetailRepository;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorHoldingDetailRepository;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorLogRepository;
-import cn.alphacat.chinastocktrader.service.simulator.PolicyContext;
 
+import java.util.List;
 import java.util.Optional;
 
 public class TradingPolicyFactory {
@@ -29,16 +29,19 @@ public class TradingPolicyFactory {
     this.tradingSimulatorHoldingDetailRepository = tradingSimulatorHoldingDetailRepository;
   }
 
-  public TradingPolicy generateNewPolicyById(Class<? extends TradingPolicy> policyClass) {
-    if (policyClass == CSI300BuyLowPriceStock.class) {
+  public TradingPolicy generateNewPolicyById(TradingPolicyEnum tradingPolicyEnum) {
+    if (tradingPolicyEnum.equals(TradingPolicyEnum.CSI_300_BUY_LOW_PRICE_STOCK)) {
       return new CSI300BuyLowPriceStock(
           this.marketIndexConstituentHandler,
           this.tradingSimulatorLogRepository,
           this.tradingSimulatorConfigurationDetailRepository,
-          this.tradingSimulatorHoldingDetailRepository,
-          new PolicyContext());
+          this.tradingSimulatorHoldingDetailRepository);
     }
     return null;
+  }
+
+  public List<TradingSimulatorLogEntity> getAllPolicies() {
+    return tradingSimulatorLogRepository.findAll();
   }
 
   public TradingPolicy getPolicyById(Long id) {
@@ -47,12 +50,8 @@ public class TradingPolicyFactory {
     if (simulatorLogEntity.isEmpty()) {
       return null;
     }
-    String policyId = simulatorLogEntity.get().getPolicyId();
-    return new CSI300BuyLowPriceStock(
-        this.marketIndexConstituentHandler,
-        this.tradingSimulatorLogRepository,
-        this.tradingSimulatorConfigurationDetailRepository,
-        this.tradingSimulatorHoldingDetailRepository,
-        new PolicyContext());
+    TradingPolicyEnum policy = simulatorLogEntity.get().getPolicy();
+    TradingPolicy newPolicyById = generateNewPolicyById(policy);
+    return newPolicyById;
   }
 }

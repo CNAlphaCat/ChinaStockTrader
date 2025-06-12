@@ -6,6 +6,8 @@ import cn.alphacat.chinastocktrader.repository.TradingSimulatorConfigurationDeta
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorHoldingDetailRepository;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorLogRepository;
 import cn.alphacat.chinastocktrader.service.simulator.PolicyContext;
+import lombok.Getter;
+import lombok.Setter;
 
 public class CSI300BuyLowPriceStock implements TradingPolicy {
   private final MarketIndexConstituentHandler marketIndexConstituentHandler;
@@ -13,25 +15,26 @@ public class CSI300BuyLowPriceStock implements TradingPolicy {
   private final TradingSimulatorConfigurationDetailRepository
       tradingSimulatorConfigurationDetailRepository;
   private final TradingSimulatorHoldingDetailRepository tradingSimulatorHoldingDetailRepository;
-  private final PolicyContext policyContext;
+
+  @Getter @Setter private PolicyContext policyContext;
 
   public CSI300BuyLowPriceStock(
       final MarketIndexConstituentHandler marketIndexConstituentHandler,
       final TradingSimulatorLogRepository tradingSimulatorLogRepository,
       final TradingSimulatorConfigurationDetailRepository
           tradingSimulatorConfigurationDetailRepository,
-      final TradingSimulatorHoldingDetailRepository tradingSimulatorHoldingDetailRepository,
-      final PolicyContext policyContext) {
+      final TradingSimulatorHoldingDetailRepository tradingSimulatorHoldingDetailRepository) {
     this.marketIndexConstituentHandler = marketIndexConstituentHandler;
     this.tradingSimulatorLogRepository = tradingSimulatorLogRepository;
     this.tradingSimulatorConfigurationDetailRepository =
         tradingSimulatorConfigurationDetailRepository;
     this.tradingSimulatorHoldingDetailRepository = tradingSimulatorHoldingDetailRepository;
-    this.policyContext = policyContext;
   }
 
   @Override
   public TradingSimulatorLogEntity execute(PolicyContext context) {
+    if (context.isNew()) {}
+
     return null;
   }
 }

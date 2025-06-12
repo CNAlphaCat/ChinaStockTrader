@@ -1,11 +1,17 @@
 package cn.alphacat.chinastocktrader.service.simulator;
 
-import cn.alphacat.chinastocktrader.entity.TradingSimulatorConfigurationDetailEntity;
+import cn.alphacat.chinastocktrader.enums.TradingSimulatorConfigurationKeyEnums;
+import java.math.BigDecimal;
+import java.util.Map;
 import lombok.Data;
-
-import java.util.List;
 
 @Data
 public class PolicyContext {
-  private List<TradingSimulatorConfigurationDetailEntity> configurationDetails;
+  private Long logId;
+  private BigDecimal initBalance;
+  private Map<TradingSimulatorConfigurationKeyEnums, String> configuration;
+
+  public boolean isNew() {
+    return this.logId == null;
+  }
 }

@@ -1,11 +1,11 @@
 package cn.alphacat.chinastocktrader.entity;
 
+import cn.alphacat.chinastocktrader.service.simulator.policy.TradingPolicyEnum;
 import jakarta.persistence.*;
-import lombok.Data;
-
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.util.List;
+import lombok.Data;
 
 @Data
 @Entity
@@ -14,7 +14,8 @@ public class TradingSimulatorLogEntity {
   @GeneratedValue(strategy = GenerationType.IDENTITY)
   private Long id;
 
-  private String policyId;
+  @Enumerated(EnumType.STRING)
+  private TradingPolicyEnum policy;
 
   private BigDecimal initBalance;
   private BigDecimal currentBalance;
