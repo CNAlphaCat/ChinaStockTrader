@@ -119,7 +119,7 @@ public class MarketStatisticService {
       if (byTradeDate.isPresent()) {
         return;
       }
-      LocalDate maxTradeDate = maxTradeDateOpt.get();
+      LocalDate maxTradeDate = stockLimitRepository.findMaxTradeDate().orElse(null);
       Map<LocalDate, StockLimitDownSummary> stockLimitDownSummary = getStockLimitDownSummary();
       Map<LocalDate, StockLimitUpSummary> stockLimitUpSummary = getStockLimitUpSummary();
       List<StockLimitView> list =
