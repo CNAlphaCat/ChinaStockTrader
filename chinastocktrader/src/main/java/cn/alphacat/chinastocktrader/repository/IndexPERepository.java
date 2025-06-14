@@ -9,8 +9,8 @@ import java.util.List;
 import java.util.Optional;
 
 public interface IndexPERepository extends JpaRepository<IndexPEEntity, Long> {
-  List<IndexPEEntity> findByIndexCodeAndDateIsGreaterThanEqual(String indexCode, LocalDate date);
+  List<IndexPEEntity> findByDateIsGreaterThanEqual(LocalDate date);
 
-  @Query("SELECT ipe.date FROM IndexPEEntity ipe WHERE ipe.indexCode = :indexCode ORDER BY ipe.date DESC LIMIT 1")
-  Optional<LocalDate> findTop1DateByIndexCodeOrderByDateDesc(String indexCode);
+  @Query("SELECT ipe.date FROM IndexPEEntity ipe ORDER BY ipe.date DESC LIMIT 1")
+  Optional<LocalDate> findTop1DateOrderByDateDesc();
 }

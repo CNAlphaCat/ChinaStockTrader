@@ -1,7 +1,8 @@
 package cn.alphacat.chinastocktrader.service.marketindex;
 
 import cn.alphacat.chinastockdata.enums.KLineTypeEnum;
-import cn.alphacat.chinastockdata.market.LeguLeguService;
+import cn.alphacat.chinastockdata.market.MarketIndexService;
+import cn.alphacat.chinastockdata.market.handler.LeguLeguHandler;
 import cn.alphacat.chinastockdata.market.MarketService;
 import cn.alphacat.chinastockdata.model.marketindex.IndexPE;
 import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
@@ -18,7 +19,6 @@ import org.springframework.stereotype.Service;
 import java.time.LocalDate;
 import java.util.*;
 import java.util.concurrent.CompletableFuture;
-import java.util.concurrent.ConcurrentHashMap;
 import java.util.concurrent.Executor;
 import java.util.concurrent.locks.ReentrantLock;
 
@@ -28,7 +28,7 @@ import cn.alphacat.chinastockdata.enums.LuguLuguIndexPEEnums;
 @Slf4j
 public class CSI300IndexService {
   private final MarketService marketService;
-  private final LeguLeguService leguLeguService;
+  private final MarketIndexService marketIndexService;
 
   private final Executor taskExecutor;
 
@@ -42,13 +42,13 @@ public class CSI300IndexService {
 
   public CSI300IndexService(
       final MarketService marketService,
+      final MarketIndexService marketIndexService,
       final MarketIndexRepository marketIndexRepository,
-      final LeguLeguService leguLeguService,
       final Executor taskExecutor,
       final IndexPERepository indexPERepository) {
     this.marketService = marketService;
+    this.marketIndexService = marketIndexService;
     this.marketIndexRepository = marketIndexRepository;
-    this.leguLeguService = leguLeguService;
     this.taskExecutor = taskExecutor;
     this.indexPERepository = indexPERepository;
   }
@@ -137,29 +137,26 @@ public class CSI300IndexService {
   }
 
   public Map<LocalDate, IndexPE> getCSI300IndexPE(LocalDate startDate) {
-    CompletableFuture.runAsync(this::getCSI300IndexPEFromAPIAndSaveToDB, taskExecutor)
+    CompletableFuture.runAsync(() -> getCSI300IndexPEFromAPIAndSaveToDB(startDate), taskExecutor)
         .exceptionally(
             ex -> {
               log.error("Failed from API getCSI300IndexPE: {}", ex.getMessage());
               return null;
             });
-    List<IndexPEEntity> entities =
-        indexPERepository.findByIndexCodeAndDateIsGreaterThanEqual(
-            LuguLuguIndexPEEnums.SCI300.getIndeCode(), startDate);
+    List<IndexPEEntity> entities = indexPERepository.findByDateIsGreaterThanEqual(startDate);
     return entities.stream()
         .collect(
             java.util.stream.Collectors.toMap(
                 IndexPEEntity::getDate, EntityConverter::convertToModel));
   }
 
-  private void getCSI300IndexPEFromAPIAndSaveToDB() {
+  private void getCSI300IndexPEFromAPIAndSaveToDB(LocalDate startDate) {
     peLock.lock();
     try {
       Optional<LocalDate> top1DateByIndexCodeOrderByDateDesc =
-          indexPERepository.findTop1DateByIndexCodeOrderByDateDesc(
-              LuguLuguIndexPEEnums.SCI300.getIndeCode());
+          indexPERepository.findTop1DateOrderByDateDesc();
       if (top1DateByIndexCodeOrderByDateDesc.isEmpty()) {
-        Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
+        Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE(startDate);
         List<IndexPEEntity> entities =
             stockIndexPE.values().stream()
                 .filter(
@@ -182,7 +179,7 @@ public class CSI300IndexService {
       }
       LocalDate latestDateInDB = top1DateByIndexCodeOrderByDateDesc.get();
 
-      Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE();
+      Map<LocalDate, IndexPE> stockIndexPE = getStockIndexPE(startDate);
       List<IndexPEEntity> entities =
           stockIndexPE.entrySet().stream()
               .filter(
@@ -224,9 +221,9 @@ public class CSI300IndexService {
         .toList();
   }
 
-  private Map<LocalDate, IndexPE> getStockIndexPE() {
+  private Map<LocalDate, IndexPE> getStockIndexPE(LocalDate startDate) {
     try {
-      return leguLeguService.getStockIndexPE(LuguLuguIndexPEEnums.SCI300);
+      return marketIndexService.getCSI300PE(startDate);
     } catch (Exception e) {
       log.error("Failed to getStockIndexPE: {}", e.getMessage());
       return Collections.emptyMap();

@@ -43,6 +43,7 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
 
     const fetchTimeoutRef = useRef(null);
     const [endDate, setEndDate] = useState('');
+    const [equityPremiumIndex, setEquityPremiumIndex] = useState(0);
 
     useEffect(() => {
         if (fetchTimeoutRef.current) {
@@ -60,7 +61,11 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                     const labels = data.map((item) => item.date);
                     const lastDate = labels[labels.length - 1];
                     setEndDate(lastDate);
+
                     const percentile = data.map((item) => item.percentile);
+
+                    const equityPremiumIndex = data.find((item) => item.date === lastDate).equityPremiumIndex;
+                    setEquityPremiumIndex(equityPremiumIndex);
 
                     setChartData({
                         labels: labels,
@@ -90,6 +95,89 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
         };
     }, [startDate]);
 
+    const getChartOptions = (showPointsDetail, chartData, startDate, endDate) => {
+        return {
+            elements: {
+                point: {
+                    radius: showPointsDetail ? 3 : 0,
+                }
+            },
+            plugins: {
+                legend: {
+                    labels: {
+                        font: {
+                            size: 20,
+                        },
+                    },
+                },
+                title: {
+                    display: true,
+                    text: `股权溢价指数历史百分位`,
+                    font: {
+                        size: 20,
+                    },
+                },
+                annotation: {
+                    annotations: {
+                        timeRangeLabel: {
+                            type: 'label',
+                            xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
+                            yValue: Math.max(...chartData.datasets[0].data) * 0.98,
+                            backgroundColor: 'rgba(255,255,255,0.7)',
+                            borderWidth: 1,
+                            borderColor: 'gray',
+                            content: [` ${startDate} - ${endDate}`],
+                            font: {
+                                size: 13,
+                            },
+                            padding: 6,
+                        },
+                        line80: {
+                            type: 'line',
+                            yMin: 80,
+                            yMax: 80,
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                enabled: false,
+                                content: '80%',
+                            }
+                        },
+                        line20: {
+                            type: 'line',
+                            yMin: 20,
+                            yMax: 20,
+                            borderColor: 'red',
+                            borderWidth: 2,
+                            borderDash: [5, 5],
+                            label: {
+                                enabled: false,
+                                content: '20%',
+                            }
+                        }
+                    }
+                }
+            },
+            scales: {
+                x: {
+                    ticks: {
+                        font: {
+                            size: 14,
+                        },
+                    },
+                },
+                y: {
+                    ticks: {
+                        font: {
+                            size: 14,
+                        },
+                    },
+                },
+            },
+        };
+    };
+
     return (
         <div>
             <h2>股权溢价指数</h2>
@@ -97,89 +185,13 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
                 历史上有多少时间比现在的股权溢价指数低
             </p>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
-                最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）
+                百分位最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）
+                <br />
+                股权溢价指数 {equityPremiumIndex}
             </div>
             <Line
                 data={chartData}
-                options={{
-                    elements: {
-                        point: {
-                            radius: showPointsDetail ? 3 : 0,
-                        }
-                    },
-                    plugins: {
-                        legend: {
-                            labels: {
-                                font: {
-                                    size: 20,
-                                },
-                            },
-                        },
-                        title: {
-                            display: true,
-                            text: `股权溢价指数历史百分位`,
-                            font: {
-                                size: 20,
-                            },
-                        }, annotation: {
-                            annotations: {
-                                timeRangeLabel: {
-                                    type: 'label',
-                                    xValue: chartData.labels[Math.floor(chartData.labels.length * 0.07)],
-                                    yValue: Math.max(...chartData.datasets[0].data) * 0.98,
-                                    backgroundColor: 'rgba(255,255,255,0.7)',
-                                    borderWidth: 1,
-                                    borderColor: 'gray',
-                                    content: [` ${startDate} - ${endDate}`],
-                                    font: {
-                                        size: 13,
-                                    },
-                                    padding: 6,
-                                },
-                                line80: {
-                                    type: 'line',
-                                    yMin: 80,
-                                    yMax: 80,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        enabled: false,
-                                        content: '80%',
-                                    }
-                                },
-                                line20: {
-                                    type: 'line',
-                                    yMin: 20,
-                                    yMax: 20,
-                                    borderColor: 'red',
-                                    borderWidth: 2,
-                                    borderDash: [5, 5],
-                                    label: {
-                                        enabled: false,
-                                        content: '20%',
-                                    }
-                                }
-                            }
-                        }
-                    },
-                    scales: {
-                        x: {
-                            ticks: {
-                                font: {
-                                    size: 14,
-                                },
-                            },
-                        },
-                        y: {
-                            ticks: {
-                                font: {
-                                    size: 14,
-                                },
-                            },
-                        },
-                    },
-                }}
+                options={getChartOptions(showPointsDetail, chartData, startDate, endDate)}
             />
         </div>
     );

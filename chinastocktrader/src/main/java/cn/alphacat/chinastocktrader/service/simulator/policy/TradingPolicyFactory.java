@@ -1,6 +1,6 @@
 package cn.alphacat.chinastocktrader.service.simulator.policy;
 
-import cn.alphacat.chinastockdata.market.MarketIndexConstituentHandler;
+import cn.alphacat.chinastockdata.market.handler.MarketIndexConstituentHandler;
 import cn.alphacat.chinastocktrader.entity.TradingSimulatorLogEntity;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorConfigurationDetailRepository;
 import cn.alphacat.chinastocktrader.repository.TradingSimulatorHoldingDetailRepository;
