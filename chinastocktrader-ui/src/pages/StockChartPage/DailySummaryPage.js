@@ -8,6 +8,7 @@ import StockLimitLogOddsChart from '../../components/market/StockLimitLogOddsCha
 import MarketAmountSummaryChart from '../../components/marketindex/MarketAmountSummaryChart';
 import TotalMarketAmountSummaryChart from '../../components/marketindex/TotalMarketAmountSummaryChart';
 import DiffBetweenIMAndIndexChart from '../../components/future/DiffBetweenIMAndIndexChart';
+import DiffBetweenIFAndIndexChart from '../../components/future/DiffBetweenIFAndIndexChart';
 const DailySummaryPage = () => {
 
     const getDefaultStartDate = (monthsAgo) => {
@@ -26,6 +27,7 @@ const DailySummaryPage = () => {
     const [startDate10Y] = useState(getDefaultStartDate(120));
     const [startDate6M] = useState(getDefaultStartDate(6));
     const [startYear1Y] = useState(getDefaultStartYear(1));
+    const [startYear5Y] = useState(getDefaultStartYear(5));
 
     return (
         <div  style={{ padding: '20px' }}>
@@ -38,6 +40,7 @@ const DailySummaryPage = () => {
             <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
             <OnePercentVolatilityFundsChart startDate={startDate6M}  showPointsDetail={false} />
             <DiffBetweenIMAndIndexChart startYear={startYear1Y} startMonth={0} showPointsDetail={false} />
+            <DiffBetweenIFAndIndexChart startYear={startYear1Y} startMonth={0} showPointsDetail={false} />
         </div>
     );
 };

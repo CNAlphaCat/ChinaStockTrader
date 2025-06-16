@@ -11,7 +11,7 @@ import {
     Legend,
 } from 'chart.js';
 import annotationPlugin from 'chartjs-plugin-annotation';
-import { getDiffBetweenIMAndIndex } from '../../services/future/FutureService';
+import { getDiffBetweenIFAndIndex } from '../../services/future/FutureService';
 
 ChartJS.register(
     CategoryScale,
@@ -24,7 +24,7 @@ ChartJS.register(
 );
 ChartJS.register(annotationPlugin);
 
-const TITLE = 'IM主力合约与现货差值';
+const TITLE = 'IF主力合约与现货差值';
 
 const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
@@ -55,7 +55,7 @@ const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true 
         fetchTimeoutRef.current = setTimeout(async () => {
 
             try {
-                const data = await getDiffBetweenIMAndIndex(startYear, startMonth);
+                const data = await getDiffBetweenIFAndIndex(startYear, startMonth);
 
                 if (Array.isArray(data)) {
                     const labels = data.map((item) => item.date);
@@ -156,7 +156,7 @@ const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true 
         <div>
             <h2>{TITLE}</h2>
             <p style={{ marginTop: '10px', fontStyle: 'italic' }}>
-                当日成交量最大的IM期货与现货的差值
+                当日成交量最大的IF期货与现货的差值
             </p>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
                 最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）

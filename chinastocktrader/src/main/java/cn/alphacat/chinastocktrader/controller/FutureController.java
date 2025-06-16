@@ -5,10 +5,7 @@ import cn.alphacat.chinastockdata.model.future.FutureMarketOverview;
 import cn.alphacat.chinastocktrader.service.future.ChinaStockTraderFutureService;
 import cn.alphacat.chinastocktrader.service.future.IFFutureService;
 import cn.alphacat.chinastocktrader.service.future.IMFutureService;
-import cn.alphacat.chinastocktrader.view.future.DiffBetweenIMAndIndexRequestView;
-import cn.alphacat.chinastocktrader.view.future.DiffBetweenIMAndIndexView;
-import cn.alphacat.chinastocktrader.view.future.FutureHistoryRequestView;
-import cn.alphacat.chinastocktrader.view.future.NoSmoothIFFutureView;
+import cn.alphacat.chinastocktrader.view.future.*;
 import org.springframework.web.bind.annotation.PostMapping;
 import org.springframework.web.bind.annotation.RequestBody;
 import org.springframework.web.bind.annotation.RequestMapping;
@@ -37,6 +34,12 @@ public class FutureController {
   public List<FutureHistory> getIFFutureHistory(@RequestBody FutureHistoryRequestView view) {
     return chinaStockTraderFutureService.getIFFutureHistory(
         view.getBeginDate(), view.getEndDate(), view.getKlt(), view.getFqt());
+  }
+
+  @PostMapping("/getDiffBetweenIFAndIndex")
+  public List<DiffBetweenIFAndIndexView> getDiffBetweenIFAndIndex(
+          @RequestBody DiffBetweenIFAndIndexRequestView view) {
+    return ifFutureService.getDiffBetweenIFAndIndex(view.getStartYear(), view.getStartMonth());
   }
 
   @PostMapping("/getDiffBetweenIMAndIndex")
