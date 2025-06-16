@@ -11,7 +11,7 @@ import cn.alphacat.chinastocktrader.util.AlgorithmUtil;
 import cn.alphacat.chinastocktrader.util.EntityConverter;
 import cn.alphacat.chinastocktrader.util.LocalDateTimeUtil;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
-import cn.alphacat.chinastocktrader.view.StockLimitView;
+import cn.alphacat.chinastocktrader.view.stock.StockLimitView;
 import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Service;
 

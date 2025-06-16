@@ -2,7 +2,7 @@ package cn.alphacat.chinastocktrader.controller.market;
 
 import cn.alphacat.chinastockdata.model.stock.StockLimitUpSummary;
 import cn.alphacat.chinastocktrader.service.market.MarketStatisticService;
-import cn.alphacat.chinastocktrader.view.StockLimitView;
+import cn.alphacat.chinastocktrader.view.stock.StockLimitView;
 import org.springframework.web.bind.annotation.GetMapping;
 import org.springframework.web.bind.annotation.RequestMapping;
 import org.springframework.web.bind.annotation.RestController;

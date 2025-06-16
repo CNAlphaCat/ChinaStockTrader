@@ -8,8 +8,7 @@ import cn.alphacat.chinastockdata.model.stock.StockInfo;
 import cn.alphacat.chinastocktrader.entity.*;
 
 import cn.alphacat.chinastocktrader.entity.stock.StockInfoEntity;
-import cn.alphacat.chinastockdata.enums.StockExchangeMarketEnums;
-import cn.alphacat.chinastocktrader.view.StockLimitView;
+import cn.alphacat.chinastocktrader.view.stock.StockLimitView;
 import org.springframework.stereotype.Component;
 
 @Component

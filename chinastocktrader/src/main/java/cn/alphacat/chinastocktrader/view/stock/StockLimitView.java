@@ -1,4 +1,4 @@
-package cn.alphacat.chinastocktrader.view;
+package cn.alphacat.chinastocktrader.view.stock;
 
 import lombok.Data;
 

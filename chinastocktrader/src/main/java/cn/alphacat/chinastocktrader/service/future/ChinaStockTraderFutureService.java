@@ -14,6 +14,8 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.time.Month;
 import java.time.Year;
+import java.util.ArrayList;
+import java.util.Collection;
 import java.util.HashMap;
 import java.util.List;
 
@@ -52,14 +54,5 @@ public class ChinaStockTraderFutureService {
     BigDecimal imPrice = imHistory.getClose();
     BigDecimal ifPrice = ifHistory.getClose();
     return imPrice.divide(ifPrice, 4, RoundingMode.HALF_UP);
-  }
-
-  public HashMap<LocalDate, List<CFFEXFutureHistory>> getFutureHistory(Year year, Month month) {
-    List<CFFEXFutureHistoryPrefixEnums> prefixEnums =
-        List.of(
-            CFFEXFutureHistoryPrefixEnums.IF,
-            CFFEXFutureHistoryPrefixEnums.IM,
-            CFFEXFutureHistoryPrefixEnums.IC);
-    return featureService.getFutureHistory(year, month, prefixEnums);
   }
 }
