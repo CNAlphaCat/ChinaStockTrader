@@ -187,7 +187,7 @@ const EquityPremiumIndexChart = ({ startDate, showPointsDetail = true }) => {
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
                 百分位最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）
                 <br />
-                股权溢价指数 {equityPremiumIndex}
+                股权溢价指数：{equityPremiumIndex}（{endDate}）
             </div>
             <Line
                 data={chartData}
