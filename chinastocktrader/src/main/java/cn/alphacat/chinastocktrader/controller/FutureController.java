@@ -6,12 +6,14 @@ import cn.alphacat.chinastocktrader.service.future.ChinaStockTraderFutureService
 import cn.alphacat.chinastocktrader.service.future.IFFutureService;
 import cn.alphacat.chinastocktrader.service.future.IMFutureService;
 import cn.alphacat.chinastocktrader.view.future.*;
-import org.springframework.web.bind.annotation.PostMapping;
-import org.springframework.web.bind.annotation.RequestBody;
-import org.springframework.web.bind.annotation.RequestMapping;
-import org.springframework.web.bind.annotation.RestController;
+import org.springframework.core.io.ByteArrayResource;
+import org.springframework.http.HttpHeaders;
+import org.springframework.http.MediaType;
+import org.springframework.http.ResponseEntity;
+import org.springframework.web.bind.annotation.*;
 
 import java.math.BigDecimal;
+import java.time.Month;
 import java.util.List;
 
 @RestController
@@ -38,8 +40,19 @@ public class FutureController {
 
   @PostMapping("/getDiffBetweenIFAndIndex")
   public List<DiffBetweenIFAndIndexView> getDiffBetweenIFAndIndex(
-          @RequestBody DiffBetweenIFAndIndexRequestView view) {
+      @RequestBody DiffBetweenIFAndIndexRequestView view) {
     return ifFutureService.getDiffBetweenIFAndIndex(view.getStartYear(), view.getStartMonth());
+  }
+
+  @GetMapping("/download/DiffBetweenIMAndIndex")
+  public ResponseEntity<ByteArrayResource> downloadDiffBetweenIMAndIndex(
+      @RequestParam int year, @RequestParam Month month) throws Exception {
+    byte[] excelBytes = imFutureService.exportDiffToExcel(year, month);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentDispositionFormData("attachment", "IM_History_From_" + year + "_" + month + ".xlsx");
+
+    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(excelBytes));
   }
 
   @PostMapping("/getDiffBetweenIMAndIndex")

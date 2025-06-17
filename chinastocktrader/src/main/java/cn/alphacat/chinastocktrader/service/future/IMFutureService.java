@@ -9,8 +9,15 @@ import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastocktrader.service.marketindex.CSI1000IndexService;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import cn.alphacat.chinastocktrader.view.future.DiffBetweenIMAndIndexView;
+import org.apache.poi.ss.usermodel.Cell;
+import org.apache.poi.ss.usermodel.Row;
+import org.apache.poi.ss.usermodel.Sheet;
+import org.apache.poi.ss.usermodel.Workbook;
+import org.apache.poi.xssf.usermodel.XSSFWorkbook;
 import org.springframework.stereotype.Service;
 
+import java.io.ByteArrayOutputStream;
+import java.io.IOException;
 import java.math.BigDecimal;
 import java.time.LocalDate;
 import java.time.Month;
@@ -67,14 +74,40 @@ public class IMFutureService {
       if (csi1000Index == null) {
         continue;
       }
-      DiffBetweenIMAndIndexView diffBetweenIMAndIndexView = new DiffBetweenIMAndIndexView();
-      diffBetweenIMAndIndexView.setDate(date);
-      diffBetweenIMAndIndexView.setDiff(futureHistory.getClose().subtract(csi1000Index.getClose()));
+      DiffBetweenIMAndIndexView diffBetweenIMAndIndexView =
+          getDiffBetweenIMAndIndexView(date, csi1000Index, futureHistory);
       result.add(diffBetweenIMAndIndexView);
     }
     return result.stream()
         .sorted(Comparator.comparing(DiffBetweenIMAndIndexView::getDate))
         .toList();
+  }
+
+  public byte[] exportDiffToExcel(int startYear, Month startMonth) throws IOException {
+    List<DiffBetweenIMAndIndexView> diffBetweenIMAndIndexViews =
+        getDiffBetweenIMAndIndex(startYear, startMonth);
+
+    try (Workbook workbook = new XSSFWorkbook()) {
+      Sheet sheet = workbook.createSheet("IM与指数点差");
+      Row headerRow = sheet.createRow(0);
+      String[] headers = {"日期", "价差", "IM", "CSI1000", "IM品种"};
+      for (int i = 0; i < headers.length; i++) {
+        Cell cell = headerRow.createCell(i);
+        cell.setCellValue(headers[i]);
+      }
+      int rowNum = 1;
+      for (DiffBetweenIMAndIndexView view : diffBetweenIMAndIndexViews) {
+        Row row = sheet.createRow(rowNum++);
+        row.createCell(0).setCellValue(view.getDate().toString());
+        row.createCell(1).setCellValue(view.getDiff().doubleValue());
+        row.createCell(2).setCellValue(view.getImPrice().doubleValue());
+        row.createCell(3).setCellValue(view.getIndexPrice().doubleValue());
+        row.createCell(4).setCellValue(view.getImCode());
+      }
+      ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
+      workbook.write(outputStream);
+      return outputStream.toByteArray();
+    }
   }
 
   public List<FutureHistory> getNoSmoothIMFutureHistory(int startYear, Month startMonth) {
@@ -111,5 +144,18 @@ public class IMFutureService {
       }
     }
     return result;
+  }
+
+  private static DiffBetweenIMAndIndexView getDiffBetweenIMAndIndexView(
+      LocalDate date, MarketIndex csi1000Index, FutureHistory futureHistory) {
+    DiffBetweenIMAndIndexView diffBetweenIMAndIndexView = new DiffBetweenIMAndIndexView();
+    diffBetweenIMAndIndexView.setDate(date);
+    BigDecimal csi1000IndexClose = csi1000Index.getClose();
+    BigDecimal imPrice = futureHistory.getClose();
+    diffBetweenIMAndIndexView.setDiff(imPrice.subtract(csi1000IndexClose));
+    diffBetweenIMAndIndexView.setIndexPrice(csi1000IndexClose);
+    diffBetweenIMAndIndexView.setImPrice(imPrice);
+    diffBetweenIMAndIndexView.setImCode(futureHistory.getCode());
+    return diffBetweenIMAndIndexView;
   }
 }

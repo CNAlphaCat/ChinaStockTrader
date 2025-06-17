@@ -9,4 +9,7 @@ import java.time.LocalDate;
 public class DiffBetweenIMAndIndexView {
   private LocalDate date;
   private BigDecimal diff;
+  private BigDecimal imPrice;
+  private BigDecimal indexPrice;
+  private String imCode;
 }

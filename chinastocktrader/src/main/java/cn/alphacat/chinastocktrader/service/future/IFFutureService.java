@@ -10,7 +10,6 @@ import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
 import cn.alphacat.chinastocktrader.service.marketindex.CSI300IndexService;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import cn.alphacat.chinastocktrader.view.future.DiffBetweenIFAndIndexView;
-import cn.alphacat.chinastocktrader.view.future.DiffBetweenIMAndIndexView;
 import org.springframework.stereotype.Service;
 
 import java.math.BigDecimal;
