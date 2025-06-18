@@ -44,13 +44,26 @@ public class FutureController {
     return ifFutureService.getDiffBetweenIFAndIndex(view.getStartYear(), view.getStartMonth());
   }
 
+  @GetMapping("/download/DiffBetweenIFAndIndex")
+  public ResponseEntity<ByteArrayResource> downloadDiffBetweenIFAndIndex(
+      @RequestParam int year, @RequestParam Month month) throws Exception {
+    byte[] excelBytes = ifFutureService.exportDiffToExcel(year, month);
+    HttpHeaders headers = new HttpHeaders();
+    headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
+    headers.setContentDispositionFormData(
+        "attachment", "IF_History_From_" + year + "_" + month + ".xlsx");
+
+    return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(excelBytes));
+  }
+
   @GetMapping("/download/DiffBetweenIMAndIndex")
   public ResponseEntity<ByteArrayResource> downloadDiffBetweenIMAndIndex(
       @RequestParam int year, @RequestParam Month month) throws Exception {
     byte[] excelBytes = imFutureService.exportDiffToExcel(year, month);
     HttpHeaders headers = new HttpHeaders();
     headers.setContentType(MediaType.APPLICATION_OCTET_STREAM);
-    headers.setContentDispositionFormData("attachment", "IM_History_From_" + year + "_" + month + ".xlsx");
+    headers.setContentDispositionFormData(
+        "attachment", "IM_History_From_" + year + "_" + month + ".xlsx");
 
     return ResponseEntity.ok().headers(headers).body(new ByteArrayResource(excelBytes));
   }
