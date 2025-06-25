@@ -1,18 +1,16 @@
-package cn.alphacat.chinastocktrader.report;
+package cn.alphacat.chinastocktrader.model.report;
 
 import lombok.Builder;
 import lombok.Data;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;
-import java.time.LocalDateTime;
 
 @Data
 @Builder
-public class ChangPercentOverOneBO {
+public class SSEIndexRisenForThreeConsecutiveDaysBO {
   private String indexCode;
   private LocalDate tradeDate;
-  private LocalDateTime tradeTime;
   private BigDecimal open;
   private BigDecimal high;
   private BigDecimal low;
@@ -24,6 +22,12 @@ public class ChangPercentOverOneBO {
 
   private BigDecimal preClose;
   private BigDecimal openChangePercent;
+
+  private BigDecimal changePercentYesterday;
+  private BigDecimal amountYesterday;
+  private BigDecimal changePercentTheDayBeforeYesterday;
+  private BigDecimal amountTheDayBeforeYesterday;
+
   private BigDecimal changePercentInFutureFiveDays;
   private BigDecimal changePercentInFutureTenDays;
   private BigDecimal changePercentInFutureTwentyDays;

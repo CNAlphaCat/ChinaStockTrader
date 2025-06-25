@@ -1,4 +1,4 @@
-package cn.alphacat.chinastocktrader.report;
+package cn.alphacat.chinastocktrader.model.report;
 
 import java.math.BigDecimal;
 import java.time.LocalDate;

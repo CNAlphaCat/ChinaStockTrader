@@ -2,6 +2,7 @@ package cn.alphacat.chinastocktrader.report;
 
 import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineTypeEnum;
 import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineWeightingEnum;
+import cn.alphacat.chinastocktrader.model.report.IMVolatilityBO;
 import cn.alphacat.chinastocktrader.service.future.IMFutureService;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
@@ -11,10 +12,10 @@ import java.util.List;
 import org.springframework.stereotype.Component;
 
 @Component
-public class IMReportService {
+public class IMVolatilityReportHandler {
   private final IMFutureService imFutureService;
 
-  public IMReportService(final IMFutureService imFutureService) {
+  public IMVolatilityReportHandler(final IMFutureService imFutureService) {
     this.imFutureService = imFutureService;
   }
 

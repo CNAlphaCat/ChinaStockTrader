@@ -1,8 +1,8 @@
 package cn.alphacat.chinastocktrader.controller.report;
 
 import cn.alphacat.chinastocktrader.model.report.CommonReport;
-import cn.alphacat.chinastocktrader.report.IMReportService;
-import cn.alphacat.chinastocktrader.report.IMVolatilityBO;
+import cn.alphacat.chinastocktrader.report.IMVolatilityReportHandler;
+import cn.alphacat.chinastocktrader.model.report.IMVolatilityBO;
 import cn.alphacat.chinastocktrader.service.report.CommonReportEnums;
 import cn.alphacat.chinastocktrader.service.report.CommonReportFactory;
 import org.springframework.format.annotation.DateTimeFormat;
@@ -17,12 +17,12 @@ import java.util.List;
 @RequestMapping("/api/report")
 public class ReportController {
   private final CommonReportFactory commonReportFactory;
-  private final IMReportService imReportService;
+  private final IMVolatilityReportHandler imVolatilityReportHandler;
 
   public ReportController(
-      CommonReportFactory commonReportFactory, final IMReportService imReportService) {
+      CommonReportFactory commonReportFactory, final IMVolatilityReportHandler imVolatilityReportHandler) {
     this.commonReportFactory = commonReportFactory;
-    this.imReportService = imReportService;
+    this.imVolatilityReportHandler = imVolatilityReportHandler;
   }
 
   @RequestMapping("/list/reportType")
@@ -38,6 +38,6 @@ public class ReportController {
   @RequestMapping("/IMVolatilityReport/{startDate}")
   public List<IMVolatilityBO> getIMReport(
       @PathVariable @DateTimeFormat(iso = DateTimeFormat.ISO.DATE) LocalDate startDate) {
-    return imReportService.getIMVolatilityReport(startDate);
+    return imVolatilityReportHandler.getIMVolatilityReport(startDate);
   }
 }

@@ -1,8 +1,9 @@
 package cn.alphacat.chinastocktrader.report;
 
 import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
+import cn.alphacat.chinastocktrader.model.report.CommonReport;
+import cn.alphacat.chinastocktrader.model.report.SSEIndexRisenForThreeConsecutiveDaysBO;
 import cn.alphacat.chinastocktrader.service.marketindex.SSEIndexHistoryService;
-import lombok.extern.slf4j.Slf4j;
 import org.springframework.stereotype.Component;
 
 import java.math.BigDecimal;
@@ -10,18 +11,19 @@ import java.math.RoundingMode;
 import java.time.LocalDate;
 import java.util.ArrayList;
 import java.util.Comparator;
+import java.util.HashMap;
 import java.util.List;
 
 @Component
-@Slf4j
-public class SSEIndexReportService {
+public class SSEIndexRisenForThreeConsecutiveDaysReportHandler {
   private final SSEIndexHistoryService sseIndexHistoryService;
 
-  public SSEIndexReportService(SSEIndexHistoryService sseIndexHistoryService) {
+  public SSEIndexRisenForThreeConsecutiveDaysReportHandler(
+      SSEIndexHistoryService sseIndexHistoryService) {
     this.sseIndexHistoryService = sseIndexHistoryService;
   }
 
-  public List<ChangPercentOverOneBO> report(BigDecimal percent) {
+  public CommonReport report() {
     LocalDate startDate = LocalDate.of(2017, 1, 1);
     List<MarketIndex> shanghaiIndexHistory =
         sseIndexHistoryService.getShanghaiIndexHistory(startDate);
@@ -29,20 +31,28 @@ public class SSEIndexReportService {
         shanghaiIndexHistory.stream()
             .sorted(Comparator.comparing(MarketIndex::getTradeDate))
             .toList();
-    BigDecimal preClose = sortedShanghaiIndexHistory.get(0).getClose();
 
-    List<ChangPercentOverOneBO> result = new ArrayList<>();
+    BigDecimal preClose = sortedShanghaiIndexHistory.get(1).getClose();
 
-    for (int i = 1; i < sortedShanghaiIndexHistory.size(); i++) {
+    BigDecimal changePercentTheDayBeforeYesterday =
+        sortedShanghaiIndexHistory.get(0).getChangePct();
+    BigDecimal amountTheDayBeforeYesterday = sortedShanghaiIndexHistory.get(0).getAmount();
+    BigDecimal changePercentYesterday = sortedShanghaiIndexHistory.get(1).getChangePct();
+    BigDecimal amountYesterday = sortedShanghaiIndexHistory.get(1).getAmount();
+
+    List<SSEIndexRisenForThreeConsecutiveDaysBO> result = new ArrayList<>();
+    for (int i = 2; i < sortedShanghaiIndexHistory.size(); i++) {
       MarketIndex marketIndex = sortedShanghaiIndexHistory.get(i);
-      BigDecimal openChangePercent =
-          marketIndex
-              .getOpen()
-              .subtract(preClose)
-              .divide(preClose, 6, RoundingMode.HALF_UP)
-              .multiply(BigDecimal.valueOf(100));
-      if (openChangePercent.compareTo(percent) < 0) {
+      if (changePercentTheDayBeforeYesterday.compareTo(new BigDecimal("0.5")) < 0
+          || changePercentYesterday.compareTo(new BigDecimal("0.5")) < 0
+          || marketIndex.getChangePct().compareTo(new BigDecimal(1)) < 0
+          || amountTheDayBeforeYesterday.compareTo(amountYesterday) > 0
+          || amountYesterday.compareTo(marketIndex.getAmount()) > 0) {
         preClose = marketIndex.getClose();
+        changePercentTheDayBeforeYesterday = changePercentYesterday;
+        amountTheDayBeforeYesterday = amountYesterday;
+        changePercentYesterday = marketIndex.getChangePct();
+        amountYesterday = marketIndex.getAmount();
         continue;
       }
 
@@ -72,11 +82,10 @@ public class SSEIndexReportService {
               .divide(preClose, 6, RoundingMode.HALF_UP)
               .multiply(BigDecimal.valueOf(100));
 
-      ChangPercentOverOneBO changPercentOverOneBO =
-          ChangPercentOverOneBO.builder()
+      SSEIndexRisenForThreeConsecutiveDaysBO sseIndexRisenForThreeConsecutiveDaysBO =
+          SSEIndexRisenForThreeConsecutiveDaysBO.builder()
               .indexCode(marketIndex.getIndexCode())
               .tradeDate(marketIndex.getTradeDate())
-              .tradeTime(marketIndex.getTradeTime())
               .open(marketIndex.getOpen())
               .high(marketIndex.getHigh())
               .low(marketIndex.getLow())
@@ -86,21 +95,16 @@ public class SSEIndexReportService {
               .change(marketIndex.getChange())
               .changePct(marketIndex.getChangePct())
               .preClose(preClose)
-              .openChangePercent(openChangePercent)
               .changePercentInFutureFiveDays(changePercentInFutureFiveDays)
               .changePercentInFutureTenDays(changePercentInFutureTenDays)
               .changePercentInFutureTwentyDays(changePercentInFutureTwentyDays)
               .build();
-
-      result.add(changPercentOverOneBO);
-
-      preClose = marketIndex.getClose();
+      result.add(sseIndexRisenForThreeConsecutiveDaysBO);
     }
 
     int upFiveDays = 0, downFiveDays = 0;
     int upTenDays = 0, downTenDays = 0;
     int upTwentyDays = 0, downTwentyDays = 0;
-    int closeGreaterThanOpenCount = 0;
 
     BigDecimal sumUpFiveDays = BigDecimal.ZERO;
     BigDecimal sumDownFiveDays = BigDecimal.ZERO;
@@ -111,7 +115,7 @@ public class SSEIndexReportService {
     BigDecimal sumUpTwentyDays = BigDecimal.ZERO;
     BigDecimal sumDownTwentyDays = BigDecimal.ZERO;
 
-    for (ChangPercentOverOneBO bo : result) {
+    for (SSEIndexRisenForThreeConsecutiveDaysBO bo : result) {
 
       if (bo.getChangePercentInFutureFiveDays().compareTo(BigDecimal.ZERO) > 0) {
         upFiveDays++;
@@ -135,10 +139,6 @@ public class SSEIndexReportService {
       } else {
         downTwentyDays++;
         sumDownTwentyDays = sumDownTwentyDays.add(bo.getChangePercentInFutureTwentyDays());
-      }
-
-      if (bo.getClose().compareTo(bo.getOpen()) > 0) {
-        closeGreaterThanOpenCount++;
       }
     }
 
@@ -169,25 +169,38 @@ public class SSEIndexReportService {
             ? sumDownTwentyDays.divide(BigDecimal.valueOf(downTwentyDays), 6, RoundingMode.HALF_UP)
             : BigDecimal.ZERO;
 
-    log.info("从2017年月1日开始");
-    log.info("计算高开大于等于 {} % 的上证指数的未来表现情况", percent);
-    log.info("共{}次", result.size());
+    CommonReport commonReport = new CommonReport();
+    commonReport.setReportName("上证指数连续三天上涨回测报告");
 
-    log.info("收盘价大于开盘价的次数：{} 次", closeGreaterThanOpenCount);
+    HashMap<String, String> reportMeta = new HashMap<>();
+    reportMeta.put("开始日期", startDate.toString());
+    reportMeta.put("结束日期", LocalDate.now().toString());
+    reportMeta.put("条件1", "连续三天上涨");
+    reportMeta.put("条件2", "前两天涨幅大于0.5%");
+    reportMeta.put("条件3", "成交量递减");
+    reportMeta.put("条件4", "第三天涨幅大于1%");
 
-    log.info("未来五天 - 上涨次数：{}, 下跌次数：{}", upFiveDays, downFiveDays);
-    log.info("五天后收盘价>高开开盘价时，未来涨幅表现平均值（五天）：{}%", avgUpFiveDays);
-    log.info("五天后收盘价<高开开盘价时，未来涨幅表现平均值（五天）：{}%", avgDownFiveDays);
+    reportMeta.put("次数统计", String.valueOf(result.size()));
+    reportMeta.put("未来五天 - 上涨次数", String.valueOf(upFiveDays));
+    reportMeta.put("未来五天 - 下跌次数", String.valueOf(downFiveDays));
+    reportMeta.put("未来五天 - 平均上涨幅度", avgUpFiveDays.toString());
+    reportMeta.put("未来五天 - 平均下跌幅度", avgDownFiveDays.toString());
+    reportMeta.put("未来十天 - 上涨次数", String.valueOf(upTenDays));
+    reportMeta.put("未来十天 - 下跌次数", String.valueOf(downTenDays));
+    reportMeta.put("未来十天 - 平均上涨幅度", avgUpTenDays.toString());
+    reportMeta.put("未来十天 - 平均下跌幅度", avgDownTenDays.toString());
+    reportMeta.put("未来二十天 - 上涨次数", String.valueOf(upTwentyDays));
+    reportMeta.put("未来二十天 - 下跌次数", String.valueOf(downTwentyDays));
+    reportMeta.put("未来二十天 - 平均上涨幅度", avgUpTwentyDays.toString());
+    reportMeta.put("未来二十天 - 平均下跌幅度", avgDownTwentyDays.toString());
 
-    log.info("未来十天 - 上涨次数：{}, 下跌次数：{}", upTenDays, downTenDays);
-    log.info("十天后收盘价>高开开盘价时，未来涨幅表现平均值（十天）：{}%", avgUpTenDays);
-    log.info("十天后收盘价<高开开盘价时，未来涨幅表现平均值（十天）：{}%", avgDownTenDays);
+    for (SSEIndexRisenForThreeConsecutiveDaysBO bo : result) {
+      reportMeta.put("具体日期", bo.getTradeDate().toString());
+    }
 
-    log.info("未来二十天 - 上涨次数：{}, 下跌次数：{}", upTwentyDays, downTwentyDays);
-    log.info("二十天后收盘价>高开开盘价时，未来涨幅表现平均值（二十天）：{}%", avgUpTwentyDays);
-    log.info("二十天后收盘价<高开开盘价时，未来涨幅表现平均值（二十天）：{}%", avgDownTwentyDays);
+    commonReport.setReportData(reportMeta);
 
-    return result;
+    return commonReport;
   }
 
   private MarketIndex getNthElementAfterIndex(List<MarketIndex> dataList, int n, int m) {
