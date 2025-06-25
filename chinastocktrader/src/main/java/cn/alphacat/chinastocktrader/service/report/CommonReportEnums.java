@@ -9,7 +9,9 @@ import java.util.List;
 @Getter
 @AllArgsConstructor
 public enum CommonReportEnums {
-  STOCK_OPEN_PRICE_AND_RISE("stockOpenPriceAndRise");
+  STOCK_OPEN_PRICE_AND_RISE("stockOpenPriceAndRise"),
+  SSE_INDEX_RISEN_FOR_THREE_CONSECUTIVE_DAYS("sseIndexRisenForThreeConsecutiveDays"),
+  ;
 
   private final String reportType;
 

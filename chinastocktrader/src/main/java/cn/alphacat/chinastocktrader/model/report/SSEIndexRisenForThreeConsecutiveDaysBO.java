@@ -31,4 +31,5 @@ public class SSEIndexRisenForThreeConsecutiveDaysBO {
   private BigDecimal changePercentInFutureFiveDays;
   private BigDecimal changePercentInFutureTenDays;
   private BigDecimal changePercentInFutureTwentyDays;
+  private BigDecimal changePercentInFutureSixtyDays;
 }

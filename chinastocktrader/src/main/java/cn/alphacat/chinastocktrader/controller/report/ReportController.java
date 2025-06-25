@@ -31,8 +31,8 @@ public class ReportController {
   }
 
   @RequestMapping("/common/{reportType}")
-  public CommonReport getStockOpenPriceAndRiseReport(@PathVariable String reportType) {
-    return commonReportFactory.generateCommonReport(CommonReportEnums.valueOf(reportType));
+  public CommonReport generateCommonReport(@PathVariable String reportType) {
+    return commonReportFactory.generateCommonReport(CommonReportEnums.getByReportType(reportType));
   }
 
   @RequestMapping("/IMVolatilityReport/{startDate}")

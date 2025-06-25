@@ -38,9 +38,9 @@ const DailySummaryPage = () => {
             <StockLimitLogOddsChart showPointsDetail={false} />
             <StockLimitChart showPointsDetail={false} />
             <CSI1000DivideCSI300Chart startDate={startDate1Y} showPointsDetail={false} />
-            <OnePercentVolatilityFundsChart startDate={startDate6M}  showPointsDetail={false} />
             <DiffBetweenIMAndIndexChart startYear={startYear1Y} startMonth={0} showPointsDetail={false} />
             <DiffBetweenIFAndIndexChart startYear={startYear1Y} startMonth={0} showPointsDetail={false} />
+            <OnePercentVolatilityFundsChart startDate={startDate6M}  showPointsDetail={false} />
         </div>
     );
 };

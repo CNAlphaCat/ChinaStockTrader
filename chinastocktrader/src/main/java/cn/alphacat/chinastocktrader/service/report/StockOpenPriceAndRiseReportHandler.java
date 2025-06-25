@@ -11,12 +11,12 @@ import java.util.LinkedHashMap;
 import java.util.List;
 
 @Service
-public class StockOpenPriceAndRiseReportService implements CommonReportService {
+public class StockOpenPriceAndRiseReportHandler implements CommonReportHandler {
   private final StockKlineCacheRepository stockKlineCacheRepository;
 
   private static final String REPORT_TITLE = "股票开盘价与最终涨幅7%回测报告";
 
-  public StockOpenPriceAndRiseReportService(StockKlineCacheRepository stockKlineCacheRepository) {
+  public StockOpenPriceAndRiseReportHandler(StockKlineCacheRepository stockKlineCacheRepository) {
     this.stockKlineCacheRepository = stockKlineCacheRepository;
   }
 
