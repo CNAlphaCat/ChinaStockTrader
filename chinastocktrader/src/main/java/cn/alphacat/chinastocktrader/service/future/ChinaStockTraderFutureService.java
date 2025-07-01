@@ -1,10 +1,8 @@
 package cn.alphacat.chinastocktrader.service.future;
 
-import cn.alphacat.chinastockdata.enums.CFFEXFutureHistoryPrefixEnums;
 import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineTypeEnum;
 import cn.alphacat.chinastockdata.enums.EastMoneyQTKlineWeightingEnum;
 import cn.alphacat.chinastockdata.future.FutureService;
-import cn.alphacat.chinastockdata.model.future.CFFEXFutureHistory;
 import cn.alphacat.chinastockdata.model.future.FutureHistory;
 import cn.alphacat.chinastockdata.model.future.FutureMarketOverview;
 import org.springframework.stereotype.Service;
@@ -12,11 +10,6 @@ import org.springframework.stereotype.Service;
 import java.math.BigDecimal;
 import java.math.RoundingMode;
 import java.time.LocalDate;
-import java.time.Month;
-import java.time.Year;
-import java.util.ArrayList;
-import java.util.Collection;
-import java.util.HashMap;
 import java.util.List;
 
 @Service

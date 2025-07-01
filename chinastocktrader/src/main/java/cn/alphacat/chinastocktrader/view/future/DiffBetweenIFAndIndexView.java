@@ -7,14 +7,26 @@ import lombok.Data;
 @Data
 public class DiffBetweenIFAndIndexView {
   private LocalDate date;
-  private BigDecimal diff;
-  private BigDecimal ifOpenPrice;
-  private BigDecimal ifClosePrice;
-  private BigDecimal ifHighPrice;
-  private BigDecimal ifLowPrice;
-  private BigDecimal ifVolume;
-  private BigDecimal ifAmount;
+
+  private BigDecimal mainDiff;
+  private BigDecimal ifMainOpenPrice;
+  private BigDecimal ifMainClosePrice;
+  private BigDecimal ifMainHighPrice;
+  private BigDecimal ifMainLowPrice;
+  private BigDecimal ifMainVolume;
+  private BigDecimal ifMainAmount;
+  private String ifMainCode;
+
+  private BigDecimal nextMonthDiff;
+  private BigDecimal ifNextMonthOpenPrice;
+  private BigDecimal ifNextMonthClosePrice;
+  private BigDecimal ifNextMonthHighPrice;
+  private BigDecimal ifNextMonthLowPrice;
+  private BigDecimal ifNextMonthVolume;
+  private BigDecimal ifNextMonthAmount;
+  private String ifNextMonthCode;
+
   private BigDecimal csi300ClosePrice;
-  private String ifCode;
+
   private BigDecimal delta;
 }

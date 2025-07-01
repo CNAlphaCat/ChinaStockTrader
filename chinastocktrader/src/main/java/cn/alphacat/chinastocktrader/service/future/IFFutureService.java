@@ -7,10 +7,10 @@ import cn.alphacat.chinastockdata.model.future.CFFEXFutureHistory;
 import cn.alphacat.chinastockdata.model.future.FutureHistory;
 import cn.alphacat.chinastockdata.model.future.FutureMarketOverview;
 import cn.alphacat.chinastockdata.model.marketindex.MarketIndex;
+import cn.alphacat.chinastocktrader.model.future.IFHistory;
 import cn.alphacat.chinastocktrader.service.marketindex.CSI300IndexService;
 import cn.alphacat.chinastocktrader.util.LocalDateUtil;
 import cn.alphacat.chinastocktrader.view.future.DiffBetweenIFAndIndexView;
-import org.apache.commons.lang3.StringUtils;
 import org.apache.poi.ss.usermodel.Cell;
 import org.apache.poi.ss.usermodel.Row;
 import org.apache.poi.ss.usermodel.Sheet;
@@ -61,10 +61,10 @@ public class IFFutureService {
   }
 
   public List<DiffBetweenIFAndIndexView> getDiffBetweenIFAndIndex(int startYear, Month startMonth) {
-    List<FutureHistory> noSmoothIMFutureHistory = getNoSmoothIFFutureHistory(startYear, startMonth);
-    Map<LocalDate, FutureHistory> noSmoothIMFutureHistoryMap =
+    List<IFHistory> noSmoothIMFutureHistory = getNoSmoothIFFutureHistory(startYear, startMonth);
+    Map<LocalDate, IFHistory> noSmoothIMFutureHistoryMap =
         noSmoothIMFutureHistory.stream()
-            .collect(Collectors.toMap(FutureHistory::getDate, futureHistory -> futureHistory));
+            .collect(Collectors.toMap(IFHistory::getDate, futureHistory -> futureHistory));
     LocalDate startDate = LocalDate.of(startYear, startMonth, 1);
     List<MarketIndex> csi300IndexDaily = csi300IndexService.getCSI300IndexDaily(startDate);
     Map<LocalDate, MarketIndex> csi300IndexDailyMap =
@@ -72,16 +72,17 @@ public class IFFutureService {
             .collect(Collectors.toMap(MarketIndex::getTradeDate, marketIndex -> marketIndex));
     List<DiffBetweenIFAndIndexView> result = new ArrayList<>();
     for (LocalDate date : csi300IndexDailyMap.keySet()) {
-      FutureHistory futureHistory = noSmoothIMFutureHistoryMap.get(date);
+      IFHistory futureHistory = noSmoothIMFutureHistoryMap.get(date);
       if (futureHistory == null) {
         continue;
       }
-      MarketIndex csi1000Index = csi300IndexDailyMap.get(date);
-      if (csi1000Index == null) {
+      MarketIndex csi300Index = csi300IndexDailyMap.get(date);
+      if (csi300Index == null) {
         continue;
       }
       DiffBetweenIFAndIndexView diffBetweenIFAndIndexView =
-          getDiffBetweenIFAndIndexView(date, futureHistory, csi1000Index);
+          getDiffBetweenIFAndIndexView(
+              date, futureHistory.getMain(), futureHistory.getNextMonth(), csi300Index);
 
       result.add(diffBetweenIFAndIndexView);
     }
@@ -91,23 +92,34 @@ public class IFFutureService {
   }
 
   private static DiffBetweenIFAndIndexView getDiffBetweenIFAndIndexView(
-      LocalDate date, FutureHistory futureHistory, MarketIndex csi1000Index) {
+      LocalDate date, FutureHistory main, FutureHistory nextMonth, MarketIndex csi300Index) {
     DiffBetweenIFAndIndexView diffBetweenIFAndIndexView = new DiffBetweenIFAndIndexView();
 
-    BigDecimal ifClose = futureHistory.getClose();
-    BigDecimal csi1000IndexClose = csi1000Index.getClose();
+    BigDecimal ifmainClose = main.getClose();
+    BigDecimal csi300IndexClose = csi300Index.getClose();
 
     diffBetweenIFAndIndexView.setDate(date);
-    diffBetweenIFAndIndexView.setDiff(ifClose.subtract(csi1000IndexClose));
-    diffBetweenIFAndIndexView.setCsi300ClosePrice(csi1000IndexClose);
-    diffBetweenIFAndIndexView.setIfCode(futureHistory.getCode());
-    diffBetweenIFAndIndexView.setIfOpenPrice(futureHistory.getOpen());
-    diffBetweenIFAndIndexView.setIfClosePrice(ifClose);
-    diffBetweenIFAndIndexView.setIfHighPrice(futureHistory.getHigh());
-    diffBetweenIFAndIndexView.setIfLowPrice(futureHistory.getLow());
-    diffBetweenIFAndIndexView.setIfVolume(futureHistory.getVolume());
-    diffBetweenIFAndIndexView.setIfAmount(futureHistory.getAmount());
-    diffBetweenIFAndIndexView.setDelta(futureHistory.getDelta());
+    diffBetweenIFAndIndexView.setMainDiff(ifmainClose.subtract(csi300IndexClose));
+    diffBetweenIFAndIndexView.setIfMainCode(main.getCode());
+    diffBetweenIFAndIndexView.setIfMainOpenPrice(main.getOpen());
+    diffBetweenIFAndIndexView.setIfMainClosePrice(ifmainClose);
+    diffBetweenIFAndIndexView.setIfMainHighPrice(main.getHigh());
+    diffBetweenIFAndIndexView.setIfMainLowPrice(main.getLow());
+    diffBetweenIFAndIndexView.setIfMainVolume(main.getVolume());
+    diffBetweenIFAndIndexView.setIfMainAmount(main.getAmount());
+    diffBetweenIFAndIndexView.setDelta(main.getDelta());
+
+    diffBetweenIFAndIndexView.setNextMonthDiff(nextMonth.getClose().subtract(csi300IndexClose));
+    diffBetweenIFAndIndexView.setIfNextMonthCode(nextMonth.getCode());
+    diffBetweenIFAndIndexView.setIfNextMonthOpenPrice(nextMonth.getOpen());
+    diffBetweenIFAndIndexView.setIfNextMonthClosePrice(nextMonth.getClose());
+    diffBetweenIFAndIndexView.setIfNextMonthHighPrice(nextMonth.getHigh());
+    diffBetweenIFAndIndexView.setIfNextMonthLowPrice(nextMonth.getLow());
+    diffBetweenIFAndIndexView.setIfNextMonthVolume(nextMonth.getVolume());
+    diffBetweenIFAndIndexView.setIfNextMonthAmount(nextMonth.getAmount());
+    diffBetweenIFAndIndexView.setDelta(nextMonth.getDelta());
+
+    diffBetweenIFAndIndexView.setCsi300ClosePrice(csi300IndexClose);
 
     return diffBetweenIFAndIndexView;
   }
@@ -121,14 +133,22 @@ public class IFFutureService {
       Row headerRow = sheet.createRow(0);
       String[] headers = {
         "日期",
-        "IF品种",
-        "IF与指数收盘价价差",
-        "IF开盘价",
-        "IF收盘价",
-        "IF最高价",
-        "IF最低价",
-        "IF成交量",
-        "IF成交金额",
+        "IF主连品种",
+        "IF主连与指数收盘价价差",
+        "IF主连开盘价",
+        "IF主连收盘价",
+        "IF主连最高价",
+        "IF主连最低价",
+        "IF主连成交量",
+        "IF主连成交金额",
+        "IF次月品种",
+        "IF次月与指数收盘价价差",
+        "IF次月开盘价",
+        "IF次月收盘价",
+        "IF次月最高价",
+        "IF次月最低价",
+        "IF次月成交量",
+        "IF次月成交金额",
         "CSI300收盘价",
         "delta"
       };
@@ -141,14 +161,25 @@ public class IFFutureService {
         Row row = sheet.createRow(rowNum++);
         int i = 0;
         row.createCell(i++).setCellValue(Objects.toString(diff.getDate(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfCode(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getDiff(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfOpenPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfClosePrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfHighPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfLowPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfVolume(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfAmount(), ""));
+
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainCode(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getMainDiff(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainOpenPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainClosePrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainHighPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainLowPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainVolume(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainAmount(), ""));
+
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthCode(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getNextMonthDiff(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthOpenPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthClosePrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthHighPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthLowPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthVolume(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthAmount(), ""));
+
         row.createCell(i++).setCellValue(Objects.toString(diff.getCsi300ClosePrice(), ""));
         row.createCell(i++).setCellValue(Objects.toString(diff.getDelta(), ""));
       }
@@ -158,19 +189,25 @@ public class IFFutureService {
     }
   }
 
-  public List<FutureHistory> getNoSmoothIFFutureHistory(int startYear, Month startMonth) {
+  public List<IFHistory> getNoSmoothIFFutureHistory(int startYear, Month startMonth) {
     HashMap<LocalDate, List<CFFEXFutureHistory>> stockFutureHistory =
         featureService.getStockFutureHistory(startYear, startMonth);
-    List<FutureHistory> result = new ArrayList<>();
+    List<IFHistory> result = new ArrayList<>();
     for (List<CFFEXFutureHistory> futureHistoryList : stockFutureHistory.values()) {
       CFFEXFutureHistory mainIFHistory = getMainIFHistory(futureHistoryList);
-      if (mainIFHistory == null) {
-        continue;
-      }
-      FutureHistory futureHistory = new FutureHistory(mainIFHistory);
-      result.add(futureHistory);
+      CFFEXFutureHistory nextMonthIFHistory = getNextMonthIFHistory(futureHistoryList);
+
+      FutureHistory main = new FutureHistory(mainIFHistory);
+      FutureHistory nextMonth = new FutureHistory(nextMonthIFHistory);
+
+      IFHistory ifHistory = new IFHistory();
+      ifHistory.setMain(main);
+      ifHistory.setNextMonth(nextMonth);
+      ifHistory.setDate(main.getDate());
+
+      result.add(ifHistory);
     }
-    return result.stream().sorted(Comparator.comparing(FutureHistory::getDate)).toList();
+    return result.stream().sorted(Comparator.comparing(IFHistory::getDate)).toList();
   }
 
   private CFFEXFutureHistory getMainIFHistory(List<CFFEXFutureHistory> cffexFutureHistoryList) {
@@ -189,6 +226,35 @@ public class IFFutureService {
         result = cffexFutureHistory;
         amount = cffexFutureHistory.getAmount();
         holdingVolume = cffexFutureHistory.getHoldingVolume();
+      }
+    }
+    return result;
+  }
+
+  private CFFEXFutureHistory getNextMonthIFHistory(
+      List<CFFEXFutureHistory> cffexFutureHistoryList) {
+    if (cffexFutureHistoryList.isEmpty()) {
+      return null;
+    }
+    CFFEXFutureHistory result = null;
+    for (CFFEXFutureHistory cffexFutureHistory : cffexFutureHistoryList) {
+      if (!cffexFutureHistory.getCode().startsWith("IF")) {
+        continue;
+      }
+      LocalDate date = cffexFutureHistory.getDate();
+      LocalDate nextMonthDate = date.plusMonths(1);
+      int year = nextMonthDate.getYear();
+      int month = nextMonthDate.getMonthValue();
+
+      String yearString = String.valueOf(year).substring(2);
+      String monthString = month < 10 ? "0" + month : String.valueOf(month);
+      String code = "IF" + yearString + monthString;
+
+
+      String futureCode = cffexFutureHistory.getCode().trim();
+      if (code.equals(futureCode)) {
+        result = cffexFutureHistory;
+        break;
       }
     }
     return result;

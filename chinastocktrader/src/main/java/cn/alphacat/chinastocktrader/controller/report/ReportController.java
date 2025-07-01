@@ -20,7 +20,8 @@ public class ReportController {
   private final IMVolatilityReportHandler imVolatilityReportHandler;
 
   public ReportController(
-      CommonReportFactory commonReportFactory, final IMVolatilityReportHandler imVolatilityReportHandler) {
+      final CommonReportFactory commonReportFactory,
+      final IMVolatilityReportHandler imVolatilityReportHandler) {
     this.commonReportFactory = commonReportFactory;
     this.imVolatilityReportHandler = imVolatilityReportHandler;
   }

@@ -2,6 +2,7 @@ package cn.alphacat.chinastocktrader.controller;
 
 import cn.alphacat.chinastockdata.model.future.FutureHistory;
 import cn.alphacat.chinastockdata.model.future.FutureMarketOverview;
+import cn.alphacat.chinastocktrader.model.future.IFHistory;
 import cn.alphacat.chinastocktrader.service.future.ChinaStockTraderFutureService;
 import cn.alphacat.chinastocktrader.service.future.IFFutureService;
 import cn.alphacat.chinastocktrader.service.future.IMFutureService;
@@ -76,7 +77,11 @@ public class FutureController {
 
   @RequestMapping("/getNoSmoothIFFutureHistory")
   public List<FutureHistory> getNoSmoothIFFutureHistory(@RequestBody NoSmoothIFFutureView view) {
-    return ifFutureService.getNoSmoothIFFutureHistory(view.getStartYear(), view.getStartMonth());
+    return ifFutureService
+        .getNoSmoothIFFutureHistory(view.getStartYear(), view.getStartMonth())
+        .stream()
+        .map(IFHistory::getMain)
+        .toList();
   }
 
   /*
