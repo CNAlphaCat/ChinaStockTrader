@@ -24,7 +24,7 @@ ChartJS.register(
 );
 ChartJS.register(annotationPlugin);
 
-const TITLE = 'IF主力合约与现货差值';
+const TITLE = 'IF主力与近月合约与现货差值';
 
 const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true }) => {
     const [chartData, setChartData] = useState({
@@ -37,7 +37,7 @@ const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true 
                 backgroundColor: 'rgba(153,102,255,0.4)',
                 borderColor: 'rgba(153,102,255,1)',
             }, {
-                label: 'IF主力合约与现货最近月差值',
+                label: 'IF近月合约与现货差值',
                 data: [],
                 fill: false,
                 backgroundColor: 'rgba(153,102,255,0.4)',
@@ -84,7 +84,7 @@ const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true 
                                 spanGaps: true
                             },
                             {
-                                label: 'IF主力合约与现货最近月差值',
+                                label: 'IF近月合约与现货差值',
                                 data: recentlyMonthDiff,
                                 fill: false,
                                 backgroundColor: 'rgba(75,192,192,0.4)',
@@ -171,7 +171,8 @@ const DiffBetweenIMAndIndex = ({ startYear, startMonth, showPointsDetail = true 
         <div>
             <h2>{TITLE}</h2>
             <p style={{ marginTop: '10px', fontStyle: 'italic' }}>
-                当日成交量最大的IF期货与现货的差值
+                主力合约：当日成交量最大的IF
+                近月合约：当月IF或次月IF
             </p>
             <div style={{ marginTop: '10px', fontSize: '20px', fontWeight: 'bold' }}>
                 主力差值最新值：{chartData.datasets[0].data[chartData.datasets[0].data.length - 1]?.toFixed(2) || '-'} （{endDate}）

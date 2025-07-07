@@ -92,13 +92,14 @@ public class IFFutureService {
   }
 
   private static DiffBetweenIFAndIndexView getDiffBetweenIFAndIndexView(
-      LocalDate date, FutureHistory main, FutureHistory nextMonth, MarketIndex csi300Index) {
+      LocalDate date, FutureHistory main, FutureHistory recentlyMonth, MarketIndex csi300Index) {
     DiffBetweenIFAndIndexView diffBetweenIFAndIndexView = new DiffBetweenIFAndIndexView();
 
     BigDecimal ifmainClose = main.getClose();
     BigDecimal csi300IndexClose = csi300Index.getClose();
 
     diffBetweenIFAndIndexView.setDate(date);
+
     diffBetweenIFAndIndexView.setMainDiff(ifmainClose.subtract(csi300IndexClose));
     diffBetweenIFAndIndexView.setIfMainCode(main.getCode());
     diffBetweenIFAndIndexView.setIfMainOpenPrice(main.getOpen());
@@ -108,14 +109,15 @@ public class IFFutureService {
     diffBetweenIFAndIndexView.setIfMainVolume(main.getVolume());
     diffBetweenIFAndIndexView.setIfMainAmount(main.getAmount());
 
-    diffBetweenIFAndIndexView.setRecentlyMonthDiff(nextMonth.getClose().subtract(csi300IndexClose));
-    diffBetweenIFAndIndexView.setIfRecentlyMonthCode(nextMonth.getCode());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthOpenPrice(nextMonth.getOpen());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthClosePrice(nextMonth.getClose());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthHighPrice(nextMonth.getHigh());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthLowPrice(nextMonth.getLow());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthVolume(nextMonth.getVolume());
-    diffBetweenIFAndIndexView.setIfRecentlyMonthAmount(nextMonth.getAmount());
+    diffBetweenIFAndIndexView.setRecentlyMonthDiff(
+        recentlyMonth.getClose().subtract(csi300IndexClose));
+    diffBetweenIFAndIndexView.setIfRecentlyMonthCode(recentlyMonth.getCode());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthOpenPrice(recentlyMonth.getOpen());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthClosePrice(recentlyMonth.getClose());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthHighPrice(recentlyMonth.getHigh());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthLowPrice(recentlyMonth.getLow());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthVolume(recentlyMonth.getVolume());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthAmount(recentlyMonth.getAmount());
 
     diffBetweenIFAndIndexView.setCsi300ClosePrice(csi300IndexClose);
 
@@ -139,14 +141,14 @@ public class IFFutureService {
         "IF主连最低价",
         "IF主连成交量",
         "IF主连成交金额",
-        "IF次月品种",
-        "IF次月与指数收盘价价差",
-        "IF次月开盘价",
-        "IF次月收盘价",
-        "IF次月最高价",
-        "IF次月最低价",
-        "IF次月成交量",
-        "IF次月成交金额",
+        "IF近月品种",
+        "IF近月与指数收盘价价差",
+        "IF近月开盘价",
+        "IF近月收盘价",
+        "IF近月最高价",
+        "IF近月最低价",
+        "IF近月成交量",
+        "IF近月成交金额",
         "CSI300收盘价"
       };
       for (int i = 0; i < headers.length; i++) {
