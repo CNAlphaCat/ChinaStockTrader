@@ -8,6 +8,6 @@ import java.time.LocalDate;
 @Data
 public class IFHistory {
   private FutureHistory main;
-  private FutureHistory nextMonth;
+  private FutureHistory recentlyMonth;
   private LocalDate date;
 }

@@ -82,7 +82,7 @@ public class IFFutureService {
       }
       DiffBetweenIFAndIndexView diffBetweenIFAndIndexView =
           getDiffBetweenIFAndIndexView(
-              date, futureHistory.getMain(), futureHistory.getNextMonth(), csi300Index);
+              date, futureHistory.getMain(), futureHistory.getRecentlyMonth(), csi300Index);
 
       result.add(diffBetweenIFAndIndexView);
     }
@@ -107,17 +107,15 @@ public class IFFutureService {
     diffBetweenIFAndIndexView.setIfMainLowPrice(main.getLow());
     diffBetweenIFAndIndexView.setIfMainVolume(main.getVolume());
     diffBetweenIFAndIndexView.setIfMainAmount(main.getAmount());
-    diffBetweenIFAndIndexView.setDelta(main.getDelta());
 
-    diffBetweenIFAndIndexView.setNextMonthDiff(nextMonth.getClose().subtract(csi300IndexClose));
-    diffBetweenIFAndIndexView.setIfNextMonthCode(nextMonth.getCode());
-    diffBetweenIFAndIndexView.setIfNextMonthOpenPrice(nextMonth.getOpen());
-    diffBetweenIFAndIndexView.setIfNextMonthClosePrice(nextMonth.getClose());
-    diffBetweenIFAndIndexView.setIfNextMonthHighPrice(nextMonth.getHigh());
-    diffBetweenIFAndIndexView.setIfNextMonthLowPrice(nextMonth.getLow());
-    diffBetweenIFAndIndexView.setIfNextMonthVolume(nextMonth.getVolume());
-    diffBetweenIFAndIndexView.setIfNextMonthAmount(nextMonth.getAmount());
-    diffBetweenIFAndIndexView.setDelta(nextMonth.getDelta());
+    diffBetweenIFAndIndexView.setRecentlyMonthDiff(nextMonth.getClose().subtract(csi300IndexClose));
+    diffBetweenIFAndIndexView.setIfRecentlyMonthCode(nextMonth.getCode());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthOpenPrice(nextMonth.getOpen());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthClosePrice(nextMonth.getClose());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthHighPrice(nextMonth.getHigh());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthLowPrice(nextMonth.getLow());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthVolume(nextMonth.getVolume());
+    diffBetweenIFAndIndexView.setIfRecentlyMonthAmount(nextMonth.getAmount());
 
     diffBetweenIFAndIndexView.setCsi300ClosePrice(csi300IndexClose);
 
@@ -149,8 +147,7 @@ public class IFFutureService {
         "IF次月最低价",
         "IF次月成交量",
         "IF次月成交金额",
-        "CSI300收盘价",
-        "delta"
+        "CSI300收盘价"
       };
       for (int i = 0; i < headers.length; i++) {
         Cell cell = headerRow.createCell(i);
@@ -171,17 +168,16 @@ public class IFFutureService {
         row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainVolume(), ""));
         row.createCell(i++).setCellValue(Objects.toString(diff.getIfMainAmount(), ""));
 
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthCode(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getNextMonthDiff(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthOpenPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthClosePrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthHighPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthLowPrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthVolume(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getIfNextMonthAmount(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthCode(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getRecentlyMonthDiff(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthOpenPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthClosePrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthHighPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthLowPrice(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthVolume(), ""));
+        row.createCell(i++).setCellValue(Objects.toString(diff.getIfRecentlyMonthAmount(), ""));
 
         row.createCell(i++).setCellValue(Objects.toString(diff.getCsi300ClosePrice(), ""));
-        row.createCell(i++).setCellValue(Objects.toString(diff.getDelta(), ""));
       }
       ByteArrayOutputStream outputStream = new ByteArrayOutputStream();
       workbook.write(outputStream);
@@ -195,14 +191,14 @@ public class IFFutureService {
     List<IFHistory> result = new ArrayList<>();
     for (List<CFFEXFutureHistory> futureHistoryList : stockFutureHistory.values()) {
       CFFEXFutureHistory mainIFHistory = getMainIFHistory(futureHistoryList);
-      CFFEXFutureHistory nextMonthIFHistory = getNextMonthIFHistory(futureHistoryList);
+      CFFEXFutureHistory recentlyMonthIFHistory = getRecentIFHistory(futureHistoryList);
 
       FutureHistory main = new FutureHistory(mainIFHistory);
-      FutureHistory nextMonth = new FutureHistory(nextMonthIFHistory);
+      FutureHistory recentlyMonth = new FutureHistory(recentlyMonthIFHistory);
 
       IFHistory ifHistory = new IFHistory();
       ifHistory.setMain(main);
-      ifHistory.setNextMonth(nextMonth);
+      ifHistory.setRecentlyMonth(recentlyMonth);
       ifHistory.setDate(main.getDate());
 
       result.add(ifHistory);
@@ -231,8 +227,7 @@ public class IFFutureService {
     return result;
   }
 
-  private CFFEXFutureHistory getNextMonthIFHistory(
-      List<CFFEXFutureHistory> cffexFutureHistoryList) {
+  private CFFEXFutureHistory getRecentIFHistory(List<CFFEXFutureHistory> cffexFutureHistoryList) {
     if (cffexFutureHistoryList.isEmpty()) {
       return null;
     }
@@ -242,6 +237,18 @@ public class IFFutureService {
         continue;
       }
       LocalDate date = cffexFutureHistory.getDate();
+      int currentYear = date.getYear();
+      int currentMonth = date.getMonthValue();
+      String currentYearString = String.valueOf(currentYear).substring(2);
+      String currentMonthString =
+          currentMonth < 10 ? "0" + currentMonth : String.valueOf(currentMonth);
+      String currentCode = "IF" + currentYearString + currentMonthString;
+      if (currentCode.equals(cffexFutureHistory.getCode())
+          && cffexFutureHistory.getAmount().compareTo(BigDecimal.ZERO) > 0) {
+        result = cffexFutureHistory;
+        break;
+      }
+
       LocalDate nextMonthDate = date.plusMonths(1);
       int year = nextMonthDate.getYear();
       int month = nextMonthDate.getMonthValue();
@@ -250,9 +257,8 @@ public class IFFutureService {
       String monthString = month < 10 ? "0" + month : String.valueOf(month);
       String code = "IF" + yearString + monthString;
 
-
-      String futureCode = cffexFutureHistory.getCode().trim();
-      if (code.equals(futureCode)) {
+      String recentlyMonth = cffexFutureHistory.getCode().trim();
+      if (code.equals(recentlyMonth)) {
         result = cffexFutureHistory;
         break;
       }

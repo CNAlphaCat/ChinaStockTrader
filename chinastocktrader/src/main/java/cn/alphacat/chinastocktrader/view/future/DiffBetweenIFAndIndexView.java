@@ -17,16 +17,14 @@ public class DiffBetweenIFAndIndexView {
   private BigDecimal ifMainAmount;
   private String ifMainCode;
 
-  private BigDecimal nextMonthDiff;
-  private BigDecimal ifNextMonthOpenPrice;
-  private BigDecimal ifNextMonthClosePrice;
-  private BigDecimal ifNextMonthHighPrice;
-  private BigDecimal ifNextMonthLowPrice;
-  private BigDecimal ifNextMonthVolume;
-  private BigDecimal ifNextMonthAmount;
-  private String ifNextMonthCode;
+  private BigDecimal recentlyMonthDiff;
+  private BigDecimal ifRecentlyMonthOpenPrice;
+  private BigDecimal ifRecentlyMonthClosePrice;
+  private BigDecimal ifRecentlyMonthHighPrice;
+  private BigDecimal ifRecentlyMonthLowPrice;
+  private BigDecimal ifRecentlyMonthVolume;
+  private BigDecimal ifRecentlyMonthAmount;
+  private String ifRecentlyMonthCode;
 
   private BigDecimal csi300ClosePrice;
-
-  private BigDecimal delta;
 }
