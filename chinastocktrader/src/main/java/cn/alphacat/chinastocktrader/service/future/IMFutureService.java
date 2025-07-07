@@ -118,8 +118,8 @@ public class IMFutureService {
         featureService.getStockFutureHistory(startYear, startMonth);
     List<IMHistory> result = new ArrayList<>();
     for (List<CFFEXFutureHistory> futureHistoryList : stockFutureHistory.values()) {
-      CFFEXFutureHistory mainIFHistory = getMainIFHistory(futureHistoryList);
-      CFFEXFutureHistory recentlyMonthIFHistory = getRecentIFHistory(futureHistoryList);
+      CFFEXFutureHistory mainIFHistory = getMainIMHistory(futureHistoryList);
+      CFFEXFutureHistory recentlyMonthIFHistory = getRecentIMHistory(futureHistoryList);
 
       FutureHistory main = new FutureHistory(mainIFHistory);
       FutureHistory recentlyMonth = new FutureHistory(recentlyMonthIFHistory);
@@ -130,27 +130,6 @@ public class IMFutureService {
       result.add(imHistory);
     }
     return result.stream().sorted(Comparator.comparing(IMHistory::getDate)).toList();
-  }
-
-  private CFFEXFutureHistory getMainIFHistory(List<CFFEXFutureHistory> cffexFutureHistoryList) {
-    if (cffexFutureHistoryList.isEmpty()) {
-      return null;
-    }
-    CFFEXFutureHistory result = null;
-    BigDecimal holdingVolume = BigDecimal.ZERO;
-    BigDecimal amount = BigDecimal.ZERO;
-    for (CFFEXFutureHistory cffexFutureHistory : cffexFutureHistoryList) {
-      if (!cffexFutureHistory.getCode().startsWith("IM")) {
-        continue;
-      }
-      if (cffexFutureHistory.getAmount().compareTo(amount) > 0
-          && cffexFutureHistory.getHoldingVolume().compareTo(holdingVolume) > 0) {
-        result = cffexFutureHistory;
-        amount = cffexFutureHistory.getAmount();
-        holdingVolume = cffexFutureHistory.getHoldingVolume();
-      }
-    }
-    return result;
   }
 
   private static DiffBetweenIMAndIndexView getDiffBetweenIMAndIndexView(
@@ -181,6 +160,8 @@ public class IMFutureService {
     diffBetweenIMAndIndexView.setImRecentlyMonthVolume(recentlyMonth.getVolume());
     diffBetweenIMAndIndexView.setImRecentlyMonthAmount(recentlyMonth.getAmount());
 
+    diffBetweenIMAndIndexView.setCsi1000ClosePrice(csi1000IndexClose);
+
     return diffBetweenIMAndIndexView;
   }
 
@@ -205,11 +186,11 @@ public class IMFutureService {
     return result;
   }
 
-  private CFFEXFutureHistory getRecentIFHistory(List<CFFEXFutureHistory> cffexFutureHistoryList) {
+  private CFFEXFutureHistory getRecentIMHistory(List<CFFEXFutureHistory> cffexFutureHistoryList) {
     if (cffexFutureHistoryList.isEmpty()) {
       return null;
     }
-    CFFEXFutureHistory result = null;
+
     for (CFFEXFutureHistory cffexFutureHistory : cffexFutureHistoryList) {
       if (!cffexFutureHistory.getCode().startsWith(IM)) {
         continue;
@@ -221,10 +202,9 @@ public class IMFutureService {
       String currentMonthString =
           currentMonth < 10 ? "0" + currentMonth : String.valueOf(currentMonth);
       String currentCode = IM + currentYearString + currentMonthString;
-      if (currentCode.equals(cffexFutureHistory.getCode())
-          && cffexFutureHistory.getAmount().compareTo(BigDecimal.ZERO) > 0) {
-        result = cffexFutureHistory;
-        break;
+      if (currentCode.equals(cffexFutureHistory.getCode().trim())
+          && cffexFutureHistory.getHoldingVolume().compareTo(BigDecimal.ZERO) > 0) {
+        return cffexFutureHistory;
       }
 
       LocalDate nextMonthDate = date.plusMonths(1);
@@ -235,12 +215,10 @@ public class IMFutureService {
       String monthString = month < 10 ? "0" + month : String.valueOf(month);
       String code = IM + yearString + monthString;
 
-      String recentlyMonth = cffexFutureHistory.getCode().trim();
-      if (code.equals(recentlyMonth)) {
-        result = cffexFutureHistory;
-        break;
+      if (code.equals(cffexFutureHistory.getCode().trim())) {
+        return cffexFutureHistory;
       }
     }
-    return result;
+    return null;
   }
 }

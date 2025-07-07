@@ -233,7 +233,6 @@ public class IFFutureService {
     if (cffexFutureHistoryList.isEmpty()) {
       return null;
     }
-    CFFEXFutureHistory result = null;
     for (CFFEXFutureHistory cffexFutureHistory : cffexFutureHistoryList) {
       if (!cffexFutureHistory.getCode().startsWith("IF")) {
         continue;
@@ -245,10 +244,9 @@ public class IFFutureService {
       String currentMonthString =
           currentMonth < 10 ? "0" + currentMonth : String.valueOf(currentMonth);
       String currentCode = "IF" + currentYearString + currentMonthString;
-      if (currentCode.equals(cffexFutureHistory.getCode())
-          && cffexFutureHistory.getAmount().compareTo(BigDecimal.ZERO) > 0) {
-        result = cffexFutureHistory;
-        break;
+      if (currentCode.equals(cffexFutureHistory.getCode().trim())
+          && cffexFutureHistory.getHoldingVolume().compareTo(BigDecimal.ZERO) > 0) {
+        return cffexFutureHistory;
       }
 
       LocalDate nextMonthDate = date.plusMonths(1);
@@ -259,12 +257,10 @@ public class IFFutureService {
       String monthString = month < 10 ? "0" + month : String.valueOf(month);
       String code = "IF" + yearString + monthString;
 
-      String recentlyMonth = cffexFutureHistory.getCode().trim();
-      if (code.equals(recentlyMonth)) {
-        result = cffexFutureHistory;
-        break;
+      if (code.equals(cffexFutureHistory.getCode().trim())) {
+        return cffexFutureHistory;
       }
     }
-    return result;
+    return null;
   }
 }
